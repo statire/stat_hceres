@@ -41,7 +41,7 @@ bib_df %>% select(CATEGORY, AUTHOR, TITLE, YEAR) %>%
 
 # Détail des agents ETBX (Un peu polémique ou pas ?) --------------------------------------------------------
 
-# Pour déterminer quels auteurs sont rattachés à ETBX, on se base sur le champs 'AFFILIATION', qui demande quelques remaniements (car AUTHORS est sous form de )
+# Pour déterminer quels auteurs sont rattachés à ETBX, on se base sur le champs 'AFFILIATION', qui demande quelques remaniements (car AUTHORS est sous forme de liste et AFFILIATION sous forme de string séparé par des ;)
 # Ces entrées sont problématiques (pas le meme nombre d'auteur et d"affilliation) et à corriger manuellement (pour le moment retiré)
 a_traiter <-  c("PUB00057566","PUB00057565","PUB00061139","PUB00063885","PUB00056781")
 
