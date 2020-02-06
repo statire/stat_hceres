@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580978667551.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "5720C5CE",
+    "lastKnownWriteTime" : 1580978754,
+    "last_content_update" : 1580978794669,
+    "path" : "~/Documents/ETBX/HCERES/stat_HCERES.R",
+    "project_path" : "stat_HCERES.R",
+    "properties" : {
+        "cursorPosition" : "49,26",
+        "scrollLine" : "25"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,119 @@
+## L'idée : Développer ici les graphiques / statistiques / tableaux pour alimenter l'évaluation HCERES, puis transférer ces résultats sous forme de dashboard (flexdashboard?) un peu sympa pour communiquer avec l'unité.
+
+library(tidyverse)
+library(bib2df)
+library(purrr)
+
+# Liste des fichiers bib
+list_bib <- list.files(pattern = ".bib")
+
+# Import et mise en tableau
+bib_df <- purrr::map_df(list_bib,bib2df)
+
+# Statistiques globales ---------------------------------------------------
+
+## Barplot du nombre d'entrées par catégorie (tout auteur confondu) (à customiser)
+bib_df %>% select(CATEGORY, AUTHOR, TITLE, YEAR) %>% 
+  unnest(AUTHOR) %>% 
+  group_by(YEAR) %>% 
+  count(CATEGORY) %>% 
+  arrange(desc(n)) %>% 
+  
+  ggplot(aes(x = x = reorder(CATEGORY, n), y = n)) +
+  geom_col(color = "black", aes(fill = CATEGORY))+
+  geom_label(aes(label = n)) +
+  facet_wrap(~YEAR, scales = "free") +
+  guides(fill = FALSE) +
+  coord_flip()
+
+## Moche, mauvaise idée...mais je laisse quand même
+bib_df %>% select(CATEGORY, AUTHOR, TITLE, YEAR) %>% 
+  unnest(AUTHOR) %>% 
+  group_by(YEAR) %>% 
+  count(CATEGORY) %>% 
+  arrange(desc(n)) %>% 
+  
+  ggplot(aes(x = YEAR, y = n)) +
+  geom_line(aes(color = CATEGORY)) +
+  geom_point(aes(fill = CATEGORY), shape=21, color = "black") 
+
+
+
+# Détail des agents ETBX (Un peu polémique ou pas ?) --------------------------------------------------------
+
+# Pour déterminer quels auteurs sont rattachés à ETBX, on se base sur le champs 'AFFILIATION', qui demande quelques remaniements (car AUTHORS est sous form de )
+# Ces entrées sont problématiques (pas le meme nombre d'auteur et d"affilliation) et à corriger manuellement (pour le moment retiré)
+a_traiter <-  c("PUB00057566","PUB00057565","PUB00061139","PUB00063885","PUB00056781")
+
+
+## Attention il faudra regrouper manuellement certains noms composés ... Adeline Alonso-Ugaglia par exemple de BSA y est 2 fois (et ça a sûrement pu arriver pour des gens d'ETBX). Dans ce cas là, les noter et on fusionnera ici ces noms avant de faire des stats/graphes.
+auteurs_ETBX <- bib_df %>%
+  select(AUTHOR,AFFILIATION, BIBTEXKEY) %>%
+  filter(!BIBTEXKEY %in% a_traiter) %>%
+  rowwise() %>%
+  mutate(AFFILIATION = list(as.list(strsplit(AFFILIATION, ";")[[1]]))) %>% 
+  unnest() %>%
+  unnest() %>% 
+  mutate(AFFILIATION = str_trim(AFFILIATION)) %>% 
+  filter(AFFILIATION %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>%
+  distinct(AUTHOR) %>%
+  pull()
+
+top_10_auteurs <- bib_df %>%
+  select(BIBTEXKEY,CATEGORY, AUTHOR, TITLE, YEAR, AFFILIATION) %>% 
+  unnest(AUTHOR) %>% 
+  filter(AUTHOR %in% auteurs_ETBX) %>% 
+  group_by(AUTHOR) %>% 
+  summarise(n_key = n_distinct(BIBTEXKEY)) %>% 
+  ungroup() %>% 
+  arrange(desc(n_key)) %>% 
+  slice(1:10) %>% pull(AUTHOR)
+
+
+## Top d'entrées par auteur ETBX
+bib_df %>% select(BIBTEXKEY,CATEGORY, AUTHOR, TITLE, YEAR, AFFILIATION) %>% 
+  unnest(AUTHOR) %>% 
+  filter(AUTHOR %in% auteurs_ETBX) %>% 
+  group_by(AUTHOR) %>% 
+  summarise(n_key = n_distinct(BIBTEXKEY)) %>% 
+  ungroup() %>% 
+  arrange(desc(n_key)) %>% 
+  filter(AUTHOR %in% top_10_auteurs) %>%
+  
+  ggplot(aes(x = reorder(AUTHOR, n_key), y =  n_key)) +
+  geom_col(aes(fill = AUTHOR), color = "black") +
+  geom_label(aes(label = n_key)) +
+  coord_flip() +
+  guides(fill = FALSE)
+
+
+
+
+
+## Idem mais stack des types d'entrées
+bib_df %>% select(BIBTEXKEY,CATEGORY, AUTHOR, TITLE, YEAR, AFFILIATION) %>% 
+  unnest(AUTHOR) %>% 
+  filter(AUTHOR %in% auteurs_ETBX) %>% 
+  group_by(AUTHOR, CATEGORY) %>% 
+  summarise(n_key = n_distinct(BIBTEXKEY)) %>% 
+  ungroup() %>% 
+  arrange(desc(n_key)) %>% 
+  group_by(AUTHOR) %>% 
+  mutate(n_max = sum(n_key)) %>% 
+  ungroup() %>% 
+  filter(AUTHOR %in% top_10_auteurs) %>% 
+  
+  ggplot(aes(x = reorder(AUTHOR, n_key), y =  n_key)) +
+  geom_col(aes(fill = CATEGORY), color = "black") +
+  geom_label(aes(y = n_max,label = n_max)) +
+  coord_flip() 
+
+
+
+
+
+
+
+
+
+

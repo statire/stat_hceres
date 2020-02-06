@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1580978716020.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D863FFB0",
+    "lastKnownWriteTime" : 1580978724,
+    "last_content_update" : 1580978724122,
+    "path" : "~/Documents/ETBX/HCERES/dashboard.Rmd",
+    "project_path" : "dashboard.Rmd",
+    "properties" : {
+        "cursorPosition" : "17,6",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
