@@ -1,5 +1,10 @@
 ## L'idée : Développer ici les graphiques / statistiques / tableaux pour alimenter l'évaluation HCERES, puis transférer ces résultats sous forme de dashboard (flexdashboard?) un peu sympa pour communiquer avec l'unité.
 
+
+## Besoin de définir qu'est ce qu'un "chercheur" pour les métriques "nombre de publications par chercheur" (chez EABX, ils ont pris CR/DR).
+## Il vaut mieux se baser dans "note" que "category" (contrairement à ces graphes ci-dessous) car category rassemble des objets assez différents (par exemple, inproceedings rassemble colloques et posters, our encore PHDTHESIS qui rassemblent mémoires d'étudiants, thèses et HDR...)
+
+
 library(tidyverse)
 library(bib2df)
 library(purrr)
