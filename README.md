@@ -12,4 +12,4 @@ L'idée : Développer ici les graphiques / statistiques / tableaux pour alimente
 
 - Traiter les éventuels conflits de noms composés
 
-- Autres pistes...
+- Questions 1er / dernier auteur
