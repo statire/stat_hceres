@@ -7,12 +7,13 @@ library(purrr)
 
 ## Package pour l'import de .bib
 library(bib2df)
+library(bibliometrix)
 
 ## Thème INRAE
 source("R/theme_inrae.R")
 
 # Liste des fichiers bib irsteadoc
-list_bib <- list.files(pattern = ".bib")
+list_bib <- list.files(pattern = "\\.bib$")
 
 # Import et mise en tableau
 bib_df <- purrr::map_df(list_bib,bib2df::bib2df)
@@ -174,8 +175,24 @@ Scopus_Request <- base_doi %>%
   paste0(collapse = " OR ")
 
 ## On lit l'export Scopus
-scopus_data <- readFiles("bdd_biblio/scopus_doi.bib") %>% 
-  convert2df(dbsource = "scopus", format = "bibtex") %>% tbl_df() %>% 
+
+scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_doi.bib") %>% 
+  bibliometrix::convert2df(dbsource = "scopus", format = "bibtex")
+
+result <- biblioAnalysis(scopus_data_raw, sep = ";")
+
+# Create a country collaboration network
+
+M <- metaTagExtraction(scopus_data_raw, Field = "AU_CO", sep = ";")
+NetMatrix <- biblioNetwork(M, analysis = "collaboration", network = "countries", sep = ";")
+
+# Plot the network
+net=networkPlot(NetMatrix, n = dim(NetMatrix)[1], Title = "Country Collaboration", type = "circle", size=TRUE, remove.multiple=FALSE,labelsize=0.7,cluster="none")
+
+
+
+
+scopus_data <- scopus_data_raw  %>% tbl_df() %>% 
   select(DOI = DI,nb_citations = TC) %>%
   arrange(desc(nb_citations))
 
