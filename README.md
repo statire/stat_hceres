@@ -1,8 +1,6 @@
 
 # Statistiques ETBX pour l’HCERES 2020
 
-![](LOGO.png)
-
 # Initialisation et import des données
 
 ``` r
