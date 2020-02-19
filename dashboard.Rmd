@@ -8,6 +8,8 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(plotly)
+load("export_dashboard.RData")
 ```
 
 Column {data-width=650}
@@ -16,7 +18,7 @@ Column {data-width=650}
 ### Chart A
 
 ```{r}
-
+ggplotly(plot_ACL, width = 400)
 ```
 
 Column {data-width=350}

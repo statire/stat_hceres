@@ -28,14 +28,14 @@ bib_df <- purrr::map_df(list_bib,bib2df::bib2df)
 # Barplot général de toutes les entrées
 
 ``` r
-bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
+plot_general <- bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
   unnest(AUTHOR) %>% 
   group_by(YEAR,NOTE) %>% 
   summarise(n = n_distinct(TITLE)) %>% 
   ungroup() %>% 
   arrange(desc(n)) %>% 
   
-  ggplot(aes(x = reorder(NOTE, n), y = n)) +
+ggplot(aes(x = reorder(NOTE, n), y = n)) +
   geom_col(color = "black", aes(fill = NOTE))+
   geom_label(aes(label = n)) +
   facet_wrap(~YEAR, scales = "free") +
@@ -44,6 +44,8 @@ bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>%
   theme_inrae() +
   labs(title = "Nombre d'entrées bibliographiques par catégorie de document", subtitle = "Tous les agents confondus", caption = "Export IrsteaDoc du 06/02/2020") +
   theme(axis.title = element_blank()) 
+
+plot_general
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
@@ -53,7 +55,7 @@ bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>%
 # Nombre d’Article à Comité de Lecture (ACL) par année.
 
 ``` r
-bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
+plot_ACL <- bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
   unnest(AUTHOR) %>% 
   group_by(YEAR, NOTE) %>%
   filter(NOTE %in% c("Article de revue scientifique à comité de lecture","Communication scientifique avec actes")) %>% 
@@ -70,6 +72,8 @@ bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>%
   theme_inrae() +
   theme(axis.title.x = element_blank())+
   labs(title = "Nombre d'ACL par année", subtitle = "Tous les agents confondus", y = "Nombre d'ACL")
+
+plot_ACL
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
@@ -280,7 +284,7 @@ Visualisation des 10 structures françaises avec lesquelles ETBX
 collabore le plus :
 
 ``` r
-links %>%
+collab_10_FRA <- links %>%
   arrange(desc(n)) %>%
   slice(1:10) %>% 
 
@@ -290,6 +294,8 @@ ggplot(aes(x = reorder(collab,n), y = n)) +
   coord_flip() +
   theme_inrae() +
   labs(y = "Nombre de co-publications", x = "Structure", title = "Nombre de collaborations nationales")
+
+collab_10_FRA
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
@@ -345,7 +351,7 @@ n_distinct(links$collab_country)
 Visualisation des 10 pays avec lesquels ETBX collabore le plus :
 
 ``` r
-links %>%
+collab_10_INT <- links %>%
   arrange(desc(importance)) %>%
   slice(1:10) %>% 
 
@@ -355,6 +361,8 @@ ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
   coord_flip() +
   theme_inrae() +
   labs(y = "Nombre de co-publications", x = "Pays", title = "Top 10 des pays collaborateurs")
+
+collab_10_INT
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
