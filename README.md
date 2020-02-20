@@ -8,6 +8,7 @@
 library(tidyverse)
 library(purrr)
 library(igraph)
+library(wordcloud2)
 
 ## Package pour l'import de .bib
 library(bib2df)
@@ -376,3 +377,21 @@ plot(network, edge.width = E(network)$importance/2)
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+
+# Analyse des mots clés
+
+``` r
+vec_keywords <- bib_df %>% unique() %>% 
+  select(KEYWORDS) %>%
+  mutate(KEYWORDS = str_split(KEYWORDS," ; ")) %>% 
+  pull(KEYWORDS) %>%
+  unlist()
+
+word_count <- tibble(keyword = vec_keywords) %>% 
+  count(keyword) %>% 
+  arrange(desc(n))
+
+wd <- wordcloud2(word_count,size = 0.5)
+```
+
+![](Wordcloud.png)
