@@ -1,4 +1,25 @@
 
+  - [Statistiques ETBX pour l’HCERES
+    2020](#statistiques-etbx-pour-lhceres-2020)
+  - [Initialisation et import des
+    données](#initialisation-et-import-des-données)
+  - [Barplot général de toutes les
+    entrées](#barplot-général-de-toutes-les-entrées)
+  - [Nombre d’Article à Comité de Lecture (ACL) par
+    année.](#nombre-darticle-à-comité-de-lecture-acl-par-année.)
+  - [Sélection des auteurs ETBX](#sélection-des-auteurs-etbx)
+  - [Récupération de données
+    bibliométriques](#récupération-de-données-bibliométriques)
+      - [Construction de la base de
+        DOIs](#construction-de-la-base-de-dois)
+      - [Requête SCOPUS](#requête-scopus)
+      - [Analyse du nombre de
+        citations](#analyse-du-nombre-de-citations)
+  - [Collaborations](#collaborations)
+      - [National](#national)
+      - [International](#international)
+  - [Analyse des mots clés](#analyse-des-mots-clés)
+
 # Statistiques ETBX pour l’HCERES 2020
 
 # Initialisation et import des données
@@ -9,18 +30,20 @@ library(tidyverse)
 library(purrr)
 library(igraph)
 library(wordcloud2)
+library(here)
+
 
 ## Package pour l'import de .bib
 library(bib2df)
 library(bibliometrix)
 
 ## Thème INRAE
-source("R/theme_inrae.R")
+source(here("R","theme_inrae.R"))
 ```
 
 ``` r
 # Liste des fichiers bib irsteadoc
-list_bib <- list.files(pattern = "\\.bib$")[-1] # Pour ne pas prendre biball
+list_bib <- list.files(here(),pattern = "\\.bib$")[-1] # Pour ne pas prendre biball
 
 # Import et mise en tableau
 bib_df <- purrr::map_df(list_bib,bib2df::bib2df)
@@ -86,61 +109,7 @@ plot_ACL
 > TODO : Attention il faudra regrouper manuellement certains noms
 > composés … Adeline Alonso-Ugaglia par exemple de BSA y est 2 fois (et
 > ça a sûrement pu arriver pour des gens d’ETBX). Dans ce cas là, les
-> noter et on fusionnera ici ces noms avant de faire des
-stats/graphes.
-
-``` r
-# Il y 5 entrées qui sont problématiques (pas le meme nombre d'auteur et d"affilliation, qui sont les critères que j'utilise) et à corriger manuellement (pour le moment retirées) :
-a_traiter <-  c("PUB00057566","PUB00057565","PUB00061139","PUB00063885","PUB00056781")
-
-
-auteurs_ETBX <- bib_df %>%
-  select(AUTHOR,AFFILIATION, BIBTEXKEY) %>%
-  filter(!BIBTEXKEY %in% a_traiter) %>%
-  rowwise() %>%
-  mutate(AFFILIATION = list(as.list(strsplit(AFFILIATION, ";")[[1]]))) %>% 
-  unnest() %>%
-  unnest() %>% 
-  mutate(AFFILIATION = str_trim(AFFILIATION)) %>% 
-  filter(AFFILIATION %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>%
-  distinct(AUTHOR) %>%
-  pull()
-
-auteurs_ETBX
-```
-
-    ##  [1] "Kuentz Simonet, V."   "Labenne, A."          "Rambonilaza, T."     
-    ##  [4] "Lescot, J.M."         "Terreaux, J.P."       "Vernier, F."         
-    ##  [7] "Leccia Phelpin, O."   "Barberis, D."         "Scordia, C."         
-    ## [10] "Carter, C."           "Rulleau, B."          "Piller, O."          
-    ## [13] "Ginelli, L."          "Gilbert, D."          "Ung, H."             
-    ## [16] "Dehez, J."            "Banos, V."            "Krieger, S.J."       
-    ## [19] "Deldrève, V."         "Aka, J."              "Bouleau, G."         
-    ## [22] "Salles, D."           "Brahic, E. "          "Deuffic, P."         
-    ## [25] "Dachary Bernard, J."  "Candau, J."           "Gassiat, A."         
-    ## [28] "Lafon, S."            "Brahic, E."           "Hautdidier, B."      
-    ## [31] "Le Floch, S."         "Ayala Cabrera, D."    "Braun, M."           
-    ## [34] "Le Gat, Y."           "Zahm, F."             "Hervé, L."           
-    ## [37] "Dubot, C."            "Sergent, A."          "Carter, C"           
-    ## [40] "Rocle, N."            "Large, A."            "Tomasian, M."        
-    ## [43] "Renaud, E."           "Pallandre, K."        "Cholet, L."          
-    ## [46] "Vacelet, A."          "Husson, A."           "Stricker, A.E."      
-    ## [49] "Metin, J."            "Lyser, S."            "Joalland, O."        
-    ## [52] "Macary, F."           "Labbouz, B."          "Leccia, O."          
-    ## [55] "Kuentz Simmonet, V."  "Migneaux, Marie"      "Ayala, D."           
-    ## [58] "Gremmel, J."          "Pham, T."             "Rambonilaza, M."     
-    ## [61] "Ben Adj Abdallah, K." "Boschet, C."          "Pillot, J."          
-    ## [64] "Aubrun, C."           "Bouet, B."            "Deldreve, V."        
-    ## [67] "Migneaux, M."         "Aouadi, N."           "Le Net, J."          
-    ## [70] "Bouleau, G"           "Vergneau, F."         "Thomas, A."          
-    ## [73] "Girard, S."           "Petit, K."            "Stricker, A. E."     
-    ## [76] "LATOUR, Jeanne"       "Conchon, P."          "Ivanovsky, V."       
-    ## [79] "Cazals, C."           "Legat, Y."            "Kuentz-Simonet, V."  
-    ## [82] "Ginter, Z."           "Leccia-Phelpin, O."   "Banos, V"            
-    ## [85] "Roussary, A."         "Mainguy, G."          "De Godoy Leski, C."  
-    ## [88] "Andro, L."            "Dachary-Bernard, J."  "Drouaud, F."         
-    ## [91] "Uny, D."              "LeGat, Y."            "Chambon, C."         
-    ## [94] "Guerendel, F."        "Boutet, A.C."
+> noter et on fusionnera ici ces noms avant de faire des stats/graphes.
 
 # Récupération de données bibliométriques
 
@@ -215,8 +184,7 @@ new_bib_df <- scopus_data %>%
 ```
 
 Nous avons récupé des information bibliométriques Scopus (dont les
-citations) pour 94 ACL /
-125.
+citations) pour 94 ACL / 125.
 
 ## Analyse du nombre de citations
 
@@ -245,7 +213,7 @@ nb_moy_citation_an
     ## [1] 80.33333
 
 On a donc 80 citations en moyenne par an sur la base de 94 documents
-parmis les 125 recensés ACL (sur 2017-2019). En toute logique, les
+parmi les 125 recensés ACL (sur 2017-2019). En toute logique, les
 articles publiés en 2017 ont été cités plus de fois (car plus nombreux,
 et surtout plus anciens).
 
@@ -275,11 +243,9 @@ links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations
 n_distinct(links$collab)
 ```
 
-    ## [1] 143
+    ## [1] 176
 
-> **ETBX a co-publié avec 143 structures françaises différentes.**
-
-### Vision barplot top 10
+> **ETBX a co-publié avec 176 structures françaises différentes.**
 
 Visualisation des 10 structures françaises avec lesquelles ETBX
 collabore le plus :
@@ -300,21 +266,6 @@ collab_10_FRA
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
-
-### Vision network
-
-J’ai tenté de remplacer les noms de structure par des abbréviations pour
-que ça soit lisible… mais c’est presque incompréhensible…
-
-``` r
-links$collab <- toupper(abbreviate(links$collab))
-
-network <- igraph::graph_from_data_frame(d=links, directed=F) 
-
-plot(network, edge.width = E(network)$importance/2)
-```
-
-<img src="README_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 ## International
 
@@ -343,11 +294,9 @@ links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations
 n_distinct(links$collab_country)
 ```
 
-    ## [1] 38
+    ## [1] 43
 
-> **ETBX a co-publié avec 38 pays différents.**
-
-### Vision barplot top 10
+> **ETBX a co-publié avec 43 pays différents.**
 
 Visualisation des 10 pays avec lesquels ETBX collabore le plus :
 
@@ -366,17 +315,7 @@ ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
 collab_10_INT
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
-
-### Vision network
-
-``` r
-network <- igraph::graph_from_data_frame(d=links, directed=F) 
-
-plot(network, edge.width = E(network)$importance/2)
-```
-
-<img src="README_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+<img src="README_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
 
 # Analyse des mots clés
 

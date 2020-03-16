@@ -21,18 +21,20 @@ library(tidyverse)
 library(purrr)
 library(igraph)
 library(wordcloud2)
+library(here)
+
 
 ## Package pour l'import de .bib
 library(bib2df)
 library(bibliometrix)
 
 ## Thème INRAE
-source("R/theme_inrae.R")
+source(here("R","theme_inrae.R"))
 ```
 
 ```{r import bibfiles}
 # Liste des fichiers bib irsteadoc
-list_bib <- list.files(pattern = "\\.bib$")[-1] # Pour ne pas prendre biball
+list_bib <- list.files(here(),pattern = "\\.bib$")[-1] # Pour ne pas prendre biball
 
 # Import et mise en tableau
 bib_df <- purrr::map_df(list_bib,bib2df::bib2df)
@@ -94,25 +96,25 @@ plot_ACL
 > TODO : Attention il faudra regrouper manuellement certains noms composés ... Adeline Alonso-Ugaglia par exemple de BSA y est 2 fois (et ça a sûrement pu arriver pour des gens d'ETBX). Dans ce cas là, les noter et on fusionnera ici ces noms avant de faire des stats/graphes.
 
 
-```{r}
+```{r include = FALSE}
 
 # Il y 5 entrées qui sont problématiques (pas le meme nombre d'auteur et d"affilliation, qui sont les critères que j'utilise) et à corriger manuellement (pour le moment retirées) :
-a_traiter <-  c("PUB00057566","PUB00057565","PUB00061139","PUB00063885","PUB00056781")
-
-
-auteurs_ETBX <- bib_df %>%
-  select(AUTHOR,AFFILIATION, BIBTEXKEY) %>%
-  filter(!BIBTEXKEY %in% a_traiter) %>%
-  rowwise() %>%
-  mutate(AFFILIATION = list(as.list(strsplit(AFFILIATION, ";")[[1]]))) %>% 
-  unnest() %>%
-  unnest() %>% 
-  mutate(AFFILIATION = str_trim(AFFILIATION)) %>% 
-  filter(AFFILIATION %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>%
-  distinct(AUTHOR) %>%
-  pull()
-
-auteurs_ETBX
+# a_traiter <-  c("PUB00057566","PUB00057565","PUB00061139","PUB00063885","PUB00056781")
+# 
+# 
+# auteurs_ETBX <- bib_df %>%
+#   select(AUTHOR,AFFILIATION, BIBTEXKEY) %>%
+#   filter(!BIBTEXKEY %in% a_traiter) %>%
+#   rowwise() %>%
+#   mutate(AFFILIATION = list(as.list(strsplit(AFFILIATION, ";")[[1]]))) %>% 
+#   unnest() %>%
+#   unnest() %>% 
+#   mutate(AFFILIATION = str_trim(AFFILIATION)) %>% 
+#   filter(AFFILIATION %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>%
+#   distinct(AUTHOR) %>%
+#   pull()
+# 
+# auteurs_ETBX
 ```
 
 
@@ -185,7 +187,7 @@ nb_citations_an
 nb_moy_citation_an <- mean(nb_citations_an$nb_citations[-4]) 
 nb_moy_citation_an
 ```
-On a donc 80 citations en moyenne par an sur la base de 94 documents parmis les 125 recensés ACL (sur 2017-2019). En toute logique, les articles publiés en 2017 ont été cités plus de fois (car plus nombreux, et surtout plus anciens).
+On a donc 80 citations en moyenne par an sur la base de 94 documents parmi les 125 recensés ACL (sur 2017-2019). En toute logique, les articles publiés en 2017 ont été cités plus de fois (car plus nombreux, et surtout plus anciens).
 
 
 # Collaborations
@@ -216,8 +218,6 @@ n_distinct(links$collab)
 
 > **ETBX a co-publié avec `r n_distinct(links$collab)` structures françaises différentes.**
 
-### Vision barplot top 10
-
 Visualisation des 10 structures françaises avec lesquelles ETBX collabore le plus :
 
 ```{r fig.width = 13.2, fig.height = 8.79, out.width = "100%", dpi = 320}
@@ -234,19 +234,6 @@ ggplot(aes(x = reorder(collab,n), y = n)) +
   labs(y = "Nombre de co-publications", x = "Structure", title = "Nombre de collaborations nationales")
 
 collab_10_FRA
-```
-
-### Vision network
-
-J'ai tenté de remplacer les noms de structure par des abbréviations pour que ça soit lisible... mais c'est presque incompréhensible...
-
-```{r fig.width = 20, fig.height = 20, out.width = "100%", dpi = 320}
-
-links$collab <- toupper(abbreviate(links$collab))
-
-network <- igraph::graph_from_data_frame(d=links, directed=F) 
-
-plot(network, edge.width = E(network)$importance/2)
 ```
 
 ## International
@@ -278,8 +265,6 @@ n_distinct(links$collab_country)
 
 > **ETBX a co-publié avec `r n_distinct(links$collab_country)` pays différents.**
 
-### Vision barplot top 10
-
 Visualisation des 10 pays avec lesquels ETBX collabore le plus :
 
 ```{r fig.width = 13.2, fig.height = 8.79, out.width = "100%", dpi = 320}
@@ -298,15 +283,6 @@ ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
 collab_10_INT
 ```
 
-### Vision network
-
-```{r fig.width = 13.2, fig.height = 8.79, out.width = "100%", dpi = 320}
-network <- igraph::graph_from_data_frame(d=links, directed=F) 
-
-plot(network, edge.width = E(network)$importance/2)
-```
-
-
 # Analyse des mots clés
 
 ```{r, fig.align = "center"}
@@ -324,11 +300,6 @@ wd <- wordcloud2(word_count,size = 0.5)
 
 ```
 
+
+
 ![](Wordcloud.png)
-
-```{r echo = FALSE}
-
-save.image(file = "export_dashboard.RData")
-
-```
-
