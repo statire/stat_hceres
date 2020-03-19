@@ -57,7 +57,7 @@ ggplot(aes(x = reorder(NOTE, n), y = n)) +
   guides(fill = FALSE) +
   coord_flip() +
   theme_inrae() +
-  labs(title = "Nombre d'entrées bibliographiques par catégorie de document", subtitle = "Tous les agents confondus", caption = "Export IrsteaDoc du 06/02/2020") +
+  labs(title = "Nombre d'entrées bibliographiques par catégorie de document", subtitle = "Tous les agents confondus", caption = "Export IrsteaDoc du 16/03/2020") +
   theme(axis.title = element_blank()) 
 
 plot_general
