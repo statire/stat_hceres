@@ -157,7 +157,7 @@ Scopus_Request <- base_doi %>%
 
 ## On lit l'export Scopus
 
-scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_doi.bib") %>% 
+scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_2.bib") %>% 
   bibliometrix::convert2df(dbsource = "scopus", format = "bibtex")
 
 scopus_data <- scopus_data_raw  %>% tbl_df() %>% 
@@ -175,7 +175,7 @@ new_bib_df <- scopus_data %>%
 
 ```
 
-Nous avons récupé des information bibliométriques Scopus (dont les citations) pour 94 ACL / 125.
+Nous avons récupéré des information bibliométriques Scopus (dont les citations) pour 96 ACL / 125.
 
 ## Analyse du nombre de citations
 
@@ -201,13 +201,26 @@ vec_affiliations <- new_bib_df %>%
   pull(delinked) %>%
   unlist() 
 
+
+wrapit <- function(text) {
+  wtext <- paste(strwrap(text, width = 50), collapse = " \n ")
+  return(wtext)
+}
+
 links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations) %>% 
   filter(!collab %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>% 
   mutate(origin_country = str_sub(origin, start= -3)) %>% 
   mutate(collab_country = str_sub(collab, start= -3)) %>% 
   filter(collab_country == "FRA") %>% 
   select(-origin_country,-collab_country) %>% 
-  group_by(origin) %>% 
+  mutate(collab = str_remove_all(collab,";")) %>% 
+  mutate(collab = str_trim(collab)) %>% 
+  mutate(collab = ifelse(collab == "BORDEAUX SCIENCES AGRO UMR SAVE GRADIGNAN FRA", yes = "BORDEAUX SCIENCES AGRO GRADIGNAN FRA", no = collab)) %>% 
+  rowwise() %>% 
+  mutate(collab = wrapit(collab)) %>% 
+  # mutate(collab = str_to_title(collab)) %>% 
+  ungroup() %>% 
+  group_by(origin) %>%
   count(collab) %>%
   ungroup() 
 ```
@@ -221,7 +234,6 @@ n_distinct(links$collab)
 Visualisation des 10 structures françaises avec lesquelles ETBX collabore le plus :
 
 ```{r fig.width = 13.2, fig.height = 8.79, out.width = "100%", dpi = 320}
-
 collab_10_FRA <- links %>%
   arrange(desc(n)) %>%
   slice(1:10) %>% 
@@ -278,7 +290,7 @@ ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
   geom_label(aes(label = importance)) +
   coord_flip() +
   theme_inrae() +
-  labs(y = "Nombre de co-publications", x = "Pays", title = "Top 10 des pays collaborateurs")
+  labs(y = "Nombre de co-publications", x = "Pays", title = "Nombre de collaboration internationales")
 
 collab_10_INT
 ```

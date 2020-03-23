@@ -155,14 +155,14 @@ Scopus_Request <- base_doi %>%
 
 ## On lit l'export Scopus
 
-scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_doi.bib") %>% 
+scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_2.bib") %>% 
   bibliometrix::convert2df(dbsource = "scopus", format = "bibtex")
 ```
 
     ## 
     ## Converting your scopus collection into a bibliographic dataframe
     ## 
-    ## Articles extracted   58 
+    ## Articles extracted   60 
     ## Done!
     ## 
     ## 
@@ -183,8 +183,8 @@ new_bib_df <- scopus_data %>%
   unique()
 ```
 
-Nous avons récupé des information bibliométriques Scopus (dont les
-citations) pour 94 ACL / 125.
+Nous avons récupéré des information bibliométriques Scopus (dont les
+citations) pour 96 ACL / 125.
 
 ## Analyse du nombre de citations
 
@@ -197,9 +197,9 @@ nb_citations_an
 
 | YEAR | nb\_citations |
 | ---: | ------------: |
-| 2017 |           137 |
-| 2018 |            78 |
-| 2019 |            26 |
+| 2017 |           144 |
+| 2018 |            82 |
+| 2019 |            30 |
 | 2020 |             1 |
 
 </div>
@@ -210,7 +210,7 @@ nb_moy_citation_an <- mean(nb_citations_an$nb_citations[-4])
 nb_moy_citation_an
 ```
 
-    ## [1] 80.33333
+    ## [1] 85.33333
 
 On a donc 80 citations en moyenne par an sur la base de 94 documents
 parmi les 125 recensés ACL (sur 2017-2019). En toute logique, les
@@ -228,13 +228,26 @@ vec_affiliations <- new_bib_df %>%
   pull(delinked) %>%
   unlist() 
 
+
+wrapit <- function(text) {
+  wtext <- paste(strwrap(text, width = 50), collapse = " \n ")
+  return(wtext)
+}
+
 links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations) %>% 
   filter(!collab %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>% 
   mutate(origin_country = str_sub(origin, start= -3)) %>% 
   mutate(collab_country = str_sub(collab, start= -3)) %>% 
   filter(collab_country == "FRA") %>% 
   select(-origin_country,-collab_country) %>% 
-  group_by(origin) %>% 
+  mutate(collab = str_remove_all(collab,";")) %>% 
+  mutate(collab = str_trim(collab)) %>% 
+  mutate(collab = ifelse(collab == "BORDEAUX SCIENCES AGRO UMR SAVE GRADIGNAN FRA", yes = "BORDEAUX SCIENCES AGRO GRADIGNAN FRA", no = collab)) %>% 
+  rowwise() %>% 
+  mutate(collab = wrapit(collab)) %>% 
+  # mutate(collab = str_to_title(collab)) %>% 
+  ungroup() %>% 
+  group_by(origin) %>%
   count(collab) %>%
   ungroup() 
 ```
@@ -243,9 +256,9 @@ links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations
 n_distinct(links$collab)
 ```
 
-    ## [1] 176
+    ## [1] 173
 
-> **ETBX a co-publié avec 176 structures françaises différentes.**
+> **ETBX a co-publié avec 173 structures françaises différentes.**
 
 Visualisation des 10 structures françaises avec lesquelles ETBX
 collabore le plus :
@@ -310,7 +323,7 @@ ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
   geom_label(aes(label = importance)) +
   coord_flip() +
   theme_inrae() +
-  labs(y = "Nombre de co-publications", x = "Pays", title = "Top 10 des pays collaborateurs")
+  labs(y = "Nombre de co-publications", x = "Pays", title = "Nombre de collaboration internationales")
 
 collab_10_INT
 ```
