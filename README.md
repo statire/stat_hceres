@@ -1,349 +1,261 @@
+Traitement des données issues du document partagé pour l’Annexe 4
+================
 
-  - [Statistiques ETBX pour l’HCERES
-    2020](#statistiques-etbx-pour-lhceres-2020)
-  - [Initialisation et import des
-    données](#initialisation-et-import-des-données)
-  - [Barplot général de toutes les
-    entrées](#barplot-général-de-toutes-les-entrées)
-  - [Nombre d’Article à Comité de Lecture (ACL) par
-    année.](#nombre-darticle-à-comité-de-lecture-acl-par-année.)
-  - [Sélection des auteurs ETBX](#sélection-des-auteurs-etbx)
-  - [Récupération de données
-    bibliométriques](#récupération-de-données-bibliométriques)
-      - [Construction de la base de
-        DOIs](#construction-de-la-base-de-dois)
-      - [Requête SCOPUS](#requête-scopus)
-      - [Analyse du nombre de
-        citations](#analyse-du-nombre-de-citations)
-  - [Collaborations](#collaborations)
-      - [National](#national)
-      - [International](#international)
-  - [Analyse des mots clés](#analyse-des-mots-clés)
+  - [Point du 24/07 sur les objectifs](#point-du-2407-sur-les-objectifs)
+      - [Production de connaissances](#production-de-connaissances)
+      - [Production “appliquée”](#production-appliquée)
+      - [Production interdisciplinaire](#production-interdisciplinaire)
+  - [Import et nettoyage des données](#import-et-nettoyage-des-données)
+      - [Import](#import)
+      - [Vision d’ensemble du fichier](#vision-densemble-du-fichier)
+  - [Exploitation des données](#exploitation-des-données)
+      - [Premiers indicateurs](#premiers-indicateurs)
+          - [Projets](#projets)
+          - [Volet “Production de
+            connaissances”](#volet-production-de-connaissances)
+      - [Vision pour chaque onglet](#vision-pour-chaque-onglet)
 
-# Statistiques ETBX pour l’HCERES 2020
+# Point du 24/07 sur les objectifs
 
-# Initialisation et import des données
+**Objectif**: Définir des extractions pertinentes (indicateurs, Figures,
+tableaux) pour alimenter la rédaction du rapport
+
+Travail au niveau Global UR / dans un second temps par axe.
+
+Plusieurs volets à exploiter :
+
+## Production de connaissances
+
+  - Articles (ACL ou non)
+  - Chapitres d’ouvrages
+
+## Production “appliquée”
+
+  - Rapports scientifiques
+  - Vulgarisation
+  - Travail sur les partenaires économiques
+
+## Production interdisciplinaire
+
+  - Travail sur les co-publications au sein de l’UR (réseau?) et
+    catégorisation manuelle des disciplines de chaque agent.
+  - Travail sur les co-publications avec d’autres labos (les labos sont
+    donc à catégoriser également)
+
+> NB : Interdisciplinaire = SHS / SE / SPI
+
+Objectif à court terme : Production d’indicateurs généraux, synthétiques
+pour chaque onglet du document excel.
+
+**Envoi le 24/07 d’un dernier mail de rappel pour demander l’ajout
+d’articles qui seraient acceptés avec modifications mineures à ce jour
+(et seulement mineures) et rappel pour les derniers retardataires. Ajout
+d’une colonne ‘révision’ à cocher pour ces cas spécifiques. Cela
+concerne publications + ouvrages.**
+
+# Import et nettoyage des données
+
+## Import
+
+Dans un premier temps, chargement des packages nécessaires :
 
 ``` r
-## Manipulation de données
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(janitor)
+library(ggplot2)
+library(readxl)
 library(purrr)
-library(igraph)
-library(wordcloud2)
-library(here)
-
-
-## Package pour l'import de .bib
 library(bib2df)
-library(bibliometrix)
 
-## Thème INRAE
-source(here("R","theme_inrae.R"))
+source("R/theme_inrae.R")
 ```
 
-``` r
-# Liste des fichiers bib irsteadoc
-list_bib <- list.files(here(),pattern = "\\.bib$")[-1] # Pour ne pas prendre biball
-
-# Import et mise en tableau
-bib_df <- purrr::map_df(list_bib,bib2df::bib2df)
-```
-
-# Barplot général de toutes les entrées
+Nous pouvons maintenant importer le fichier :
 
 ``` r
-plot_general <- bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
-  unnest(AUTHOR) %>% 
-  group_by(YEAR,NOTE) %>% 
-  summarise(n = n_distinct(TITLE)) %>% 
-  ungroup() %>% 
-  arrange(desc(n)) %>% 
+# Fichier en date du 24/07/2020
+file <- "data/Annexe4_ETBX_complet_2020_07_24.xlsx"
+
+
+# On réalise une boucle pour importer tous les onglets dans un seul objet, sous forme de liste
+
+sheet_names <- readxl::excel_sheets(file) 
+ANX4 <- list()
+
+for (i in sheet_names[-1:-3]) {
   
-ggplot(aes(x = reorder(NOTE, n), y = n)) +
-  geom_col(color = "black", aes(fill = NOTE))+
-  geom_label(aes(label = n)) +
-  facet_wrap(~YEAR, scales = "free") +
-  guides(fill = FALSE) +
-  coord_flip() +
-  theme_inrae() +
-  labs(title = "Nombre d'entrées bibliographiques par catégorie de document", subtitle = "Tous les agents confondus", caption = "Export IrsteaDoc du 16/03/2020") +
-  theme(axis.title = element_blank()) 
-
-plot_general
-```
-
-<img src="README_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
-
-> TO-DO: Idem mais “chercheurs” uniquement
-
-# Nombre d’Article à Comité de Lecture (ACL) par année.
-
-``` r
-plot_ACL <- bib_df %>% select(NOTE, AUTHOR, TITLE, YEAR) %>% 
-  unnest(AUTHOR) %>% 
-  group_by(YEAR, NOTE) %>%
-  filter(NOTE %in% c("Article de revue scientifique à comité de lecture","Communication scientifique avec actes")) %>% 
-  summarise(n = n_distinct(TITLE)) %>% 
-  mutate(n_publi = sum(n)) %>% 
-  ungroup() %>% 
-  arrange(YEAR) %>% 
-  mutate(YEAR = as.character(YEAR)) %>% 
+  ANX4[[i]] <- readxl::read_excel(file, sheet  = i, skip = 1) %>%
+    select(-1) # Retrait colonne n°
   
-  ggplot(aes(x = YEAR, y = n)) +
-  geom_col(color = "black", aes(fill = NOTE))+
-  geom_label(aes(y = n_publi,label = n_publi), size = 6) +
-  scale_fill_inrae(name = "Catégorie")+
-  theme_inrae() +
-  theme(axis.title.x = element_blank())+
-  labs(title = "Nombre d'ACL par année", subtitle = "Tous les agents confondus", y = "Nombre d'ACL")
+}
 
-plot_ACL
+# On rend exploitables les noms d'onglets
+names(ANX4) <- janitor::make_clean_names(names(ANX4))
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
-
-> TO-DO: Idem mais “chercheurs” uniquement
-
-# Sélection des auteurs ETBX
-
-> TODO : Attention il faudra regrouper manuellement certains noms
-> composés … Adeline Alonso-Ugaglia par exemple de BSA y est 2 fois (et
-> ça a sûrement pu arriver pour des gens d’ETBX). Dans ce cas là, les
-> noter et on fusionnera ici ces noms avant de faire des stats/graphes.
-
-# Récupération de données bibliométriques
-
-Les données telles que le nombre de citations ne sont pas présentes dans
-l’export IrsteaDoc. Il faut donc chercher ces informations par une
-requête sur les principaux moteurs de recherche dédiés. Scopus a fourni
-le plus de résultats avec 58 retours basés sur le DOI. Environ 40 infos
-de citation ont également été récupérées manuellement via google
-scholar.
-
-## Construction de la base de DOIs
+Pour les tableaux avec cases à cocher, on définit une fonction de
+nettoyage qui permettra lors des synthèses de remplacer les `NA` par des
+`0` et les `x` par des `1`. Ainsi, nous pourrons faire des sommes etc.
 
 ``` r
-## J'ai retrouvé quelques DOI à la main
-complement_doi <- read_csv2("complement_doi.csv")
-
-## Ces 16 entrées ne sont que dans HAL (aucune info citation)
-doi_hal <- complement_doi %>% filter(str_detect(DOI,"hal-"))
-
-## Ces entrées ont un DOI OK à ajouter
-doi_ok <- complement_doi %>% filter(str_detect(DOI,"10.")) %>% select(-citations)
-
-## Ces entrées n'ont pas de DOI mais j'ai relevé quand c'était possible leur nombre de citations
-citations <- complement_doi %>% filter(!is.na(citations)) %>% rename(nb_citations=citations) %>% 
-  select(BIBTEXKEY,nb_citations)
-
-base_doi <- bib_df %>% 
-  filter(NOTE %in% c("Article de revue scientifique à comité de lecture","Communication scientifique avec actes")) %>% 
-  select(BIBTEXKEY,AUTHOR,TITLE,DOI) %>% 
-  mutate(DOI = str_remove_all(DOI,"http://dx.doi.org/")) %>%
-  filter(!BIBTEXKEY %in% doi_ok$BIBTEXKEY) %>%
-  bind_rows(doi_ok) %>% drop_na(DOI)
+replace_cases <- function(x){
+  
+  value <- ifelse(is.na(x), yes = 0, no = 1)
+  
+  return(value)
+  
+}
 ```
 
-## Requête SCOPUS
+## Vision d’ensemble du fichier
+
+Voici un tableau récapitulatif de la dimension des onglets, triés selon
+le nombre de lignes.
 
 ``` r
-## Voici la requête à effectuer sur Scopus > Advanced
-Scopus_Request <- base_doi %>% 
-  mutate(request = paste0("DOI(",DOI,")")) %>% 
-  pull(request) %>% 
-  paste0(collapse = " OR ")
+tab_dim <- tibble(
+  Onglet = names(ANX4),
+  nb_lignes = map_dbl(ANX4, nrow),
+  nb_colonnes = map_dbl(ANX4, ncol)
+) %>% 
+  arrange(desc(nb_lignes))
 
-## On lit l'export Scopus
 
-scopus_data_raw <- bibliometrix::readFiles("bdd_biblio/scopus_2.bib") %>% 
-  bibliometrix::convert2df(dbsource = "scopus", format = "bibtex")
-```
+# On ne va garder que les onglets qui ne sont pas vides. 
+# Les onglets à 2 lignes sont à chaque fois vide (car la colonne n° a été remplie pour 1 et 2) 
+# sauf pour 4 onglets particuliers qui sont ici rajoutés.
+Onglets_non_empty <- tab_dim %>%
+  filter(nb_lignes != 2) %>%
+  pull(Onglet) %>% 
+  c("ii_3_activ_consult","iii_1_elearning", "i_9_contrats_internationaux","i_1_articles_synth")
 
-    ## 
-    ## Converting your scopus collection into a bibliographic dataframe
-    ## 
-    ## Articles extracted   60 
-    ## Done!
-    ## 
-    ## 
-    ## Generating affiliation field tag AU_UN from C1:  Done!
-
-``` r
-scopus_data <- scopus_data_raw  %>% tbl_df() %>% 
-  select(DOI = DI,nb_citations = TC) %>%
-  arrange(desc(nb_citations))
-
-## On refait la jointure avec les données initiales, et on ajoute les données de citation
-new_bib_df <- scopus_data %>%
-  mutate(DOI = tolower(DOI)) %>%
-  inner_join(base_doi %>% mutate(DOI = tolower(DOI)), by = "DOI") %>%
-  select(BIBTEXKEY,nb_citations) %>%
-  bind_rows(citations) %>% 
-  full_join(bib_df, by = "BIBTEXKEY") %>% 
-  unique()
-```
-
-Nous avons récupéré des information bibliométriques Scopus (dont les
-citations) pour 96 ACL / 125.
-
-## Analyse du nombre de citations
-
-``` r
-nb_citations_an <- new_bib_df %>% group_by(YEAR) %>% summarise(nb_citations = sum(nb_citations,na.rm=TRUE))
-nb_citations_an
+# On affiche le tableau
+tab_dim %>% filter(Onglet %in% Onglets_non_empty)
 ```
 
 <div class="kable-table">
 
-| YEAR | nb\_citations |
-| ---: | ------------: |
-| 2017 |           144 |
-| 2018 |            82 |
-| 2019 |            30 |
-| 2020 |             1 |
+| Onglet                                | nb\_lignes | nb\_colonnes |
+| :------------------------------------ | ---------: | -----------: |
+| i\_3\_autres\_produits\_colloq        |        139 |            5 |
+| i\_1\_articles\_sctfq                 |        122 |            5 |
+| ii\_3\_particip\_instances            |         84 |            3 |
+| i\_8\_evaluation\_articles            |         82 |            3 |
+| iii\_3\_enseignement                  |         53 |            8 |
+| ii\_3\_rapports\_expertise            |         48 |            5 |
+| i\_8\_responsab\_instances            |         46 |            5 |
+| i\_3\_articles\_actes\_colloq         |         46 |            7 |
+| iii\_3\_formation                     |         42 |            8 |
+| i\_11\_orga\_colloq\_internat         |         41 |            4 |
+| i\_9\_contrats\_nationaux             |         40 |           10 |
+| i\_9\_contrats\_coll\_territ          |         34 |            9 |
+| i\_2\_chap\_ouvrages                  |         34 |            5 |
+| iii\_2\_prod\_issues\_de\_theses      |         28 |            8 |
+| ii\_4\_produits\_vulgarisation        |         27 |            5 |
+| i\_8\_evaluation\_projets             |         22 |            3 |
+| i\_9\_contrats\_pia                   |         18 |            9 |
+| i\_7\_comites\_editoriaux             |         15 |            2 |
+| i\_1\_autres\_articles                |         15 |            5 |
+| i\_5\_questionnaires                  |         13 |            8 |
+| i\_10\_post\_docs                     |         11 |            9 |
+| ii\_4\_emissions\_radio\_tv           |         10 |            5 |
+| ii\_2\_formations\_acteurs\_socioec   |          9 |            5 |
+| i\_10\_chercheurs\_accueil            |          8 |            9 |
+| i\_4\_logiciels                       |          8 |            5 |
+| i\_11\_responsab\_stes\_savantes      |          7 |            3 |
+| i\_9\_contrats\_prive\_r\_d\_indus    |          7 |            9 |
+| i\_11\_sejours\_labo\_etrangers       |          6 |            4 |
+| iii\_3\_respons\_master               |          6 |            5 |
+| i\_9\_contrats\_europ\_autres         |          6 |            9 |
+| i\_11\_prix\_distictions              |          5 |            3 |
+| ii\_2\_creation\_reseaux              |          5 |            5 |
+| i\_11\_invit\_colloq\_etranger        |          4 |            3 |
+| i\_6\_produits\_propres\_a\_une\_disc |          4 |            4 |
+| ii\_2\_contrats\_r\_d                 |          4 |            5 |
+| i\_2\_monographies                    |          3 |            5 |
+| ii\_3\_activ\_consult                 |          2 |            2 |
+| i\_1\_articles\_synth                 |          2 |            5 |
+| iii\_1\_elearning                     |          1 |            8 |
+| ii\_2\_bourses\_cifre                 |          1 |            4 |
+| i\_9\_contrats\_internationaux        |          1 |            9 |
+| i\_4\_bases\_de\_donnees              |          1 |            4 |
+| i\_4\_outils\_aide\_decision          |          1 |            4 |
+| i\_2\_theses\_publiees                |          1 |            4 |
+| i\_2\_dir\_ou\_coord                  |          1 |            5 |
 
 </div>
 
-``` r
-# On enlève 2020 car plombe le résultat.
-nb_moy_citation_an <- mean(nb_citations_an$nb_citations[-4]) 
-nb_moy_citation_an
-```
+# Exploitation des données
 
-    ## [1] 85.33333
+## Premiers indicateurs
 
-On a donc 80 citations en moyenne par an sur la base de 94 documents
-parmi les 125 recensés ACL (sur 2017-2019). En toute logique, les
-articles publiés en 2017 ont été cités plus de fois (car plus nombreux,
-et surtout plus anciens).
-
-# Collaborations
-
-## National
+### Projets
 
 ``` r
-vec_affiliations <- new_bib_df %>%
-  select(AFFILIATION) %>% 
-  mutate(delinked = str_split(AFFILIATION, " ; ")) %>% 
-  pull(delinked) %>%
-  unlist() 
+## Extraction des projets nationaux
+projets_nationaux <- ANX4$i_9_contrats_nationaux %>% 
+  clean_names() %>% 
+  select(-x11) %>% 
+  drop_na(contrat) %>% drop_na(date_debut) %>% mutate(type = "National")
 
+## Projets européens
+projets_europ <- ANX4$i_9_contrats_europ_autres %>% drop_na(`Date début`) %>% clean_names() %>%  
+  mutate_at(vars(date_debut:date_fin), as.Date) %>% mutate(type = "Européen")
 
-wrapit <- function(text) {
-  wtext <- paste(strwrap(text, width = 50), collapse = " \n ")
-  return(wtext)
-}
+## Projets internationaux
+projets_inter <- ANX4$i_9_contrats_internationaux %>% clean_names() %>%  
+  mutate_at(vars(date_debut:date_fin), as.Date) %>% mutate(type = "International")
 
-links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations) %>% 
-  filter(!collab %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>% 
-  mutate(origin_country = str_sub(origin, start= -3)) %>% 
-  mutate(collab_country = str_sub(collab, start= -3)) %>% 
-  filter(collab_country == "FRA") %>% 
-  select(-origin_country,-collab_country) %>% 
-  mutate(collab = str_remove_all(collab,";")) %>% 
-  mutate(collab = str_trim(collab)) %>% 
-  mutate(collab = ifelse(collab == "BORDEAUX SCIENCES AGRO UMR SAVE GRADIGNAN FRA", yes = "BORDEAUX SCIENCES AGRO GRADIGNAN FRA", no = collab)) %>% 
-  rowwise() %>% 
-  mutate(collab = wrapit(collab)) %>% 
-  # mutate(collab = str_to_title(collab)) %>% 
-  ungroup() %>% 
-  group_by(origin) %>%
-  count(collab) %>%
-  ungroup() 
-```
+## Projets R&D
+projets_rd <- ANX4$i_9_contrats_prive_r_d_indus %>% clean_names() %>%  
+  mutate_at(vars(date_debut:date_fin), as.Date) %>% mutate(type = "R&D")
 
-``` r
-n_distinct(links$collab)
-```
+## Projets PIA
+projets_pia <- ANX4$i_9_contrats_pia %>% clean_names() %>%  drop_na(contrat,date_debut) %>% 
+  mutate_at(vars(date_debut:date_fin), as.Date) %>% mutate(type = "PIA")
 
-    ## [1] 173
+## Projets de collectivités territoriales
+projets_coll_terri <- ANX4$i_9_contrats_coll_territ %>% clean_names() %>%  drop_na(contrat,date_debut, date_fin) %>% 
+  mutate_at(vars(date_debut), as.Date, origin = "1899-12-31") %>% mutate(type = "Collect. Ter.")
 
-> **ETBX a co-publié avec 173 structures françaises différentes.**
+## On assemble le tout
+PRJ <- bind_rows(projets_nationaux,projets_europ)%>%
+  bind_rows(projets_inter) %>% 
+  bind_rows(projets_rd) %>% 
+  bind_rows(projets_pia) %>% 
+  bind_rows(projets_coll_terri) %>% 
+  mutate_at(vars(porteur:axe_3), replace_cases) %>% unique() %>% 
+  mutate(date_fin = replace_na(date_fin, "2024-01-01")) %>%  # Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.
+  mutate(porteur = recode(porteur, "0" = "ETBX Non porteur", "1"="ETBX Porteur")) %>% 
+  mutate(porteur = factor(porteur, levels = c("ETBX Porteur", "ETBX Non porteur")))
 
-Visualisation des 10 structures françaises avec lesquelles ETBX
-collabore le plus :
-
-``` r
-collab_10_FRA <- links %>%
-  arrange(desc(n)) %>%
-  slice(1:10) %>% 
-
-ggplot(aes(x = reorder(collab,n), y = n)) +
-  geom_col(fill = "#00a3a6", color ="black") +
-  geom_label(aes(label = n)) +
-  coord_flip() +
+## Production du graphique
+ggplot(PRJ, aes(x = date_fin, y = contrat)) +
+  geom_segment(aes(x = date_debut, xend = date_fin, y = contrat, yend = contrat, color = type), size = 4) +
+  geom_point(fill = "black", shape = 23, color = "black", size = 4) +
+  geom_point(aes(x = date_debut, y = contrat), color ="black", fill = "black", shape = 23, size = 4) +
   theme_inrae() +
-  labs(y = "Nombre de co-publications", x = "Structure", title = "Nombre de collaborations nationales")
-
-collab_10_FRA
+  geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
+  labs(x = "Temps", y = "Contrats", color = "Type") +
+  facet_wrap(~porteur, scales = "free")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="README_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
-## International
+### Volet “Production de connaissances”
+
+Problème rencontré : La saisie manuelle par les collègues sur le fichier
+excel ne permet pas d’effectuer de requêtes intéressantes… Il faut donc
+extraire manuellement auteur / date / revue sur des colonnes
+supplémentaires. Ci-dessous j’ai également tenté une approche via la
+base HALINRAE.
 
 ``` r
-vec_affiliations <- new_bib_df %>%
-  filter(NOTE %in% c("Article de revue scientifique à comité de lecture","Communication scientifique avec actes")) %>% 
-  select(AFFILIATION) %>% 
-  mutate(delinked = str_split(AFFILIATION, " ; ")) %>% 
-  pull(delinked) %>%
-  unlist() 
-
-links <- tibble(origin = "INRAE BORDEAUX UR ETBX FRA", collab = vec_affiliations) %>% 
-  filter(!collab %in% c("IRSTEA BORDEAUX UR ETBX FRA","INRAE BORDEAUX UR ETBX FRA")) %>% 
-  mutate(origin_country = str_sub(origin, start= -3)) %>% 
-  mutate(collab_country = str_sub(collab, start= -3)) %>% 
-  mutate(collab_country = toupper(collab_country)) %>% 
-  group_by(origin_country) %>% 
-  count(collab_country) %>%
-  ungroup() %>%
-  select(origin_country,collab_country,importance=n) %>% 
-  filter(!collab_country %in% c("FRA","-")) %>% 
-  mutate(origin_country = recode(origin_country,"FRA"="ETBX")) 
+# J'ai testé un export massif HAL-INRAE avec dates 2017-2020 et structure ETBX
+test <- bib2df::bib2df("~/biball.bib")
 ```
 
-``` r
-n_distinct(links$collab_country)
-```
+## Vision pour chaque onglet
 
-    ## [1] 43
-
-> **ETBX a co-publié avec 43 pays différents.**
-
-Visualisation des 10 pays avec lesquels ETBX collabore le plus :
-
-``` r
-collab_10_INT <- links %>%
-  arrange(desc(importance)) %>%
-  slice(1:10) %>% 
-
-ggplot(aes(x = reorder(collab_country,importance), y = importance)) +
-  geom_col(fill = "#00a3a6", color ="black") +
-  geom_label(aes(label = importance)) +
-  coord_flip() +
-  theme_inrae() +
-  labs(y = "Nombre de co-publications", x = "Pays", title = "Nombre de collaboration internationales")
-
-collab_10_INT
-```
-
-<img src="README_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
-
-# Analyse des mots clés
-
-``` r
-vec_keywords <- bib_df %>% unique() %>% 
-  select(KEYWORDS) %>%
-  mutate(KEYWORDS = str_split(KEYWORDS," ; ")) %>% 
-  pull(KEYWORDS) %>%
-  unlist()
-
-word_count <- tibble(keyword = vec_keywords) %>% 
-  count(keyword) %>% 
-  arrange(desc(n))
-
-wd <- wordcloud2(word_count,size = 0.5)
-```
-
-![](Wordcloud.png)
+\[TO-DO\]
