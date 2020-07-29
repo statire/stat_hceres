@@ -122,8 +122,9 @@ Onglets_non_empty <- tab_dim %>%
   pull(Onglet) %>% 
   c("ii_3_activ_consult","iii_1_elearning", "i_9_contrats_internationaux","i_1_articles_synth")
 
-# On affiche le tableau
-tab_dim %>% filter(Onglet %in% Onglets_non_empty)
+# On affiche le tableau (Seulement le top 10)
+tab_dim %>% filter(Onglet %in% Onglets_non_empty) %>% 
+  slice(1:10)
 ```
 
 # Exploitation des données
@@ -131,6 +132,8 @@ tab_dim %>% filter(Onglet %in% Onglets_non_empty)
 ## Premiers indicateurs
 
 ### Projets
+
+> NB : Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.
 
 ```{r out.width = "100%", fig.width = 13, fig.height = 10}
 
@@ -167,7 +170,7 @@ PRJ <- bind_rows(projets_nationaux,projets_europ)%>%
   bind_rows(projets_pia) %>% 
   bind_rows(projets_coll_terri) %>% 
   mutate_at(vars(porteur:axe_3), replace_cases) %>% unique() %>% 
-  mutate(date_fin = replace_na(date_fin, "2024-01-01")) %>%  # Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.
+  mutate(date_fin = replace_na(date_fin, "2024-01-01")) %>%  
   mutate(porteur = recode(porteur, "0" = "ETBX Non porteur", "1"="ETBX Porteur")) %>% 
   mutate(porteur = factor(porteur, levels = c("ETBX Porteur", "ETBX Non porteur"))) %>%
   group_by(contrat) %>% 
@@ -201,7 +204,9 @@ acl1 <- ANX4$i_1_articles_sctfq %>%
   mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
   drop_na(year) %>% 
   group_by(year) %>% 
-  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Articles")
+  summarise(n = n_distinct(reference_complete)) %>% 
+  spread(key = year, value = n) %>%
+  mutate(Type = "Articles")
 
 
 acl2 <- ANX4$i_1_autres_articles %>%
@@ -210,7 +215,9 @@ acl2 <- ANX4$i_1_autres_articles %>%
   filter(year != 2016) %>% 
   drop_na(year) %>% 
   group_by(year) %>% 
-  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Autres articles")
+  summarise(n = n_distinct(reference_complete)) %>%
+  spread(key = year, value = n) %>%
+  mutate(Type = "Autres articles")
 
 
 acl3 <- ANX4$i_3_articles_actes_colloq %>%
@@ -228,20 +235,8 @@ acl4 <- ANX4$i_2_chap_ouvrages %>%
   group_by(year) %>% 
   summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Chapitres ouvrages")
 
-
-# acl5 <- ANX4$ii_3_rapports_expertise %>%
-#   clean_names() %>% 
-#   mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
-#   filter(year != 2016) %>% 
-#   drop_na(year) %>% 
-#   group_by(year) %>% 
-#   summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Rapports d'expertise")
-
 bind_rows(acl1,acl2,acl3,acl4) %>% 
-  select(Type,`2017`:`2020`) %>% 
-  gt() %>% 
-  tab_header(title = "Productions de connaissance par ETBX") %>%
-  tab_options(table.width = pct(100))
+  select(Type,`2017`:`2020`) 
 
 ```
 
@@ -288,37 +283,17 @@ tab_relecture_articles <- ANX4$i_8_evaluation_articles %>%
   ungroup() %>% 
   unique()
 
-## On affiche le tableau en ne gardant que les 10 premiers selon 2 critères
-#  tab_relecture_articles %>% 
-#   arrange(desc(n_relecture)) %>% 
-#   slice(1:10) %>% 
-#   gt() %>% 
-#   tab_header(title = "Publications et relectures, tri par # de relectures (top 10)") %>%
-#   tab_options(table.width = pct(100))
-# 
-# tab_relecture_articles %>% 
-#   arrange(desc(n_publi))%>% 
-#   slice(1:10) %>% 
-#   gt() %>% 
-#   tab_header(title = "Publications et relectures, tri par nombre de publications (top 10)") %>%
-#   tab_options(table.width = pct(100))
-
-
+# Top 10
 tab_relecture_articles %>%
   mutate(indicateur_som = n_relecture * n_publi) %>% 
   arrange(desc(indicateur_som))%>% 
-  slice(1:10) %>% 
-  gt() %>%
-  tab_header(title = "Top 10 selon l'indicateur 'n_relecture x n_publi'") %>%
-  tab_options(table.width = pct(100))
+  slice(1:10) 
 
+# Top 10
 tab_relecture_articles %>%
   mutate(indicateur_moy = (n_relecture + n_publi)/2) %>% 
   arrange(desc(indicateur_moy))%>% 
-  slice(1:10) %>% 
-  gt() %>%
-  tab_header(title = "Top 10 selon l'indicateur '(n_relecture + n_publi) / 2'") %>%
-  tab_options(table.width = pct(100))
+  slice(1:10) 
 ```
 
 ### Partenariats
@@ -331,11 +306,9 @@ A partir du tableau rempli par l'équipe du GT4, nous pouvons créer une liste d
 table_auteurs <- readxl::read_excel("data/table_auteurs_ETBX_2020-07-27_SL_DC.xlsx") %>% clean_names()
 
 
-liste_auteurs_etbx <- table_auteurs %>% filter(etbx_oui_non %in% c("oui","temporaire", "oui / BSA", "temporaire ?")) %>% 
+liste_auteurs_etbx <- table_auteurs %>%
+  filter(etbx_oui_non %in% c("oui","temporaire", "oui / BSA", "temporaire ?")) %>% 
   pull(auteur)
-
-
-# liste_auteurs_etbx <- gsub('^\\.|\\.$', '', liste_auteurs_etbx) %>% unique()
 
 liste_auteurs_etbx
 ```
@@ -351,15 +324,13 @@ calcul_nb_copubli <- function(x) {
     length()
 }
 
+# Top 10
 ANX4$i_1_articles_sctfq %>% clean_names() %>% 
   select(reference_complete) %>% 
   rowwise() %>% 
   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% 
   ungroup() %>% arrange(desc(nb_copubli)) %>% 
-  slice(1:10) %>% 
-  gt() %>%
-  tab_header(title = "Top 10 des publications en nombre d'agents ETBX associés") %>%
-  tab_options(table.width = pct(100))
+  slice(1:10) 
 ```
 
 Nous pouvons maintenant nous intéresser aux disciplines :
@@ -377,6 +348,7 @@ calcul_discipline <- function(x) {
   
 }
 
+# Top 10
 ANX4$i_1_articles_sctfq %>% clean_names() %>% 
   select(reference_complete) %>% 
   rowwise() %>% 
@@ -384,10 +356,7 @@ ANX4$i_1_articles_sctfq %>% clean_names() %>%
   mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length) %>% 
   ungroup() %>% 
   arrange(desc(nb_disciplines)) %>% 
-  slice(1:10) %>% 
-  gt() %>%
-  tab_header(title = "Top 10 du nombre de disciplines combinées entre agents ETBX") %>%
-  tab_options(table.width = pct(100))
+  slice(1:10) 
 
 ```
 
