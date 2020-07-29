@@ -20,19 +20,22 @@ Travail au niveau Global UR / dans un second temps par axe.
 
 Plusieurs volets à exploiter :
 
-## Production de connaissances
+- **Production de connaissances**
 
-- Articles (ACL ou non)
-- Chapitres d'ouvrages
+  - Articles (ACL ou non)
+  - Chapitres d'ouvrages
+  - Identification dans les revues
 
-## Production "appliquée"
-- Rapports scientifiques
-- Vulgarisation
-- Travail sur les partenaires économiques
+- **Production "appliquée"**
 
-## Production interdisciplinaire
-- Travail sur les co-publications au sein de l'UR (réseau?) et catégorisation manuelle des disciplines de chaque agent.
-- Travail sur les co-publications avec d'autres labos (les labos sont donc à catégoriser également)
+  - Rapports scientifiques
+  - Vulgarisation
+  - Travail sur les partenaires économiques
+
+- **Partenariats**
+
+  - Travail sur les co-publications au sein de l'UR (réseau?) et catégorisation manuelle des disciplines de chaque agent.
+  - Travail sur les co-publications avec d'autres labos (les labos sont donc à catégoriser également)
 
 > NB : Interdisciplinaire = SHS / SE / SPI
 
@@ -55,6 +58,9 @@ library(ggplot2)
 library(readxl)
 library(purrr)
 library(bib2df)
+library(gt)
+library(wordcloud2)
+library(stringr)
 
 source("R/theme_inrae.R")
 ```
@@ -62,8 +68,8 @@ source("R/theme_inrae.R")
 Nous pouvons maintenant importer le fichier :
 
 ```{r}
-# Fichier en date du 24/07/2020
-file <- "data/Annexe4_ETBX_complet_2020_07_24.xlsx"
+# Fichier en date du 27/07/2020
+file <- "data/Annexe4_ETBX_complet_2020_07_27.xlsx"
 
 
 # On réalise une boucle pour importer tous les onglets dans un seul objet, sous forme de liste
@@ -152,7 +158,7 @@ projets_pia <- ANX4$i_9_contrats_pia %>% clean_names() %>%  drop_na(contrat,date
 
 ## Projets de collectivités territoriales
 projets_coll_terri <- ANX4$i_9_contrats_coll_territ %>% clean_names() %>%  drop_na(contrat,date_debut, date_fin) %>% 
-  mutate_at(vars(date_debut), as.Date, origin = "1899-12-31") %>% mutate(type = "Collect. Ter.")
+  mutate_at(vars(date_debut), as.Date, origin = "1899-12-31") %>% mutate(type = "National")
 
 ## On assemble le tout
 PRJ <- bind_rows(projets_nationaux,projets_europ)%>%
@@ -163,30 +169,260 @@ PRJ <- bind_rows(projets_nationaux,projets_europ)%>%
   mutate_at(vars(porteur:axe_3), replace_cases) %>% unique() %>% 
   mutate(date_fin = replace_na(date_fin, "2024-01-01")) %>%  # Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.
   mutate(porteur = recode(porteur, "0" = "ETBX Non porteur", "1"="ETBX Porteur")) %>% 
-  mutate(porteur = factor(porteur, levels = c("ETBX Porteur", "ETBX Non porteur")))
+  mutate(porteur = factor(porteur, levels = c("ETBX Porteur", "ETBX Non porteur"))) %>%
+  group_by(contrat) %>% 
+  summarise(date_debut = min(date_debut),
+         date_fin = max(date_fin),
+         porteur = unique(porteur),
+         type = unique(type)) %>% 
+  ungroup()
+
 
 ## Production du graphique
-ggplot(PRJ, aes(x = date_fin, y = contrat)) +
-  geom_segment(aes(x = date_debut, xend = date_fin, y = contrat, yend = contrat, color = type), size = 4) +
+ggplot(PRJ, aes(x = date_fin, y = reorder(contrat,date_debut))) +
+  geom_segment(aes(x = date_debut, xend = date_fin, y = reorder(contrat,date_debut), yend = reorder(contrat,date_debut), color = type), size = 4) +
   geom_point(fill = "black", shape = 23, color = "black", size = 4) +
-  geom_point(aes(x = date_debut, y = contrat), color ="black", fill = "black", shape = 23, size = 4) +
+  geom_point(aes(x = date_debut, y = reorder(contrat,date_debut)), color ="black", fill = "black", shape = 23, size = 4) +
   theme_inrae() +
   geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
-  labs(x = "Temps", y = "Contrats", color = "Type") +
+  labs(x = "Temps", y = "Contrats", color = "Type de contrat") +
   facet_wrap(~porteur, scales = "free")
 ```
 
-### Volet "Production de connaissances"
+Il y a **`r n_distinct(PRJ$contrat)`** projets en cours.
 
-Problème rencontré : La saisie manuelle par les collègues sur le fichier excel ne permet pas d'effectuer de requêtes intéressantes... Il faut donc extraire manuellement auteur / date / revue sur des colonnes supplémentaires. Ci-dessous j'ai également tenté une approche via la base HALINRAE.
+### Production de connaissances
+
+Nous étudions dans un premier temps le nombre d'articles, d'actes de colloques et de chapitres d'ouvrages publiés par des agents de l'unité.
+
+```{r}
+acl1 <- ANX4$i_1_articles_sctfq %>%
+  clean_names() %>% 
+  mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
+  drop_na(year) %>% 
+  group_by(year) %>% 
+  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Articles")
+
+
+acl2 <- ANX4$i_1_autres_articles %>%
+  clean_names() %>% 
+  mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
+  filter(year != 2016) %>% 
+  drop_na(year) %>% 
+  group_by(year) %>% 
+  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Autres articles")
+
+
+acl3 <- ANX4$i_3_articles_actes_colloq %>%
+  clean_names() %>% 
+  mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
+  drop_na(year) %>% 
+  group_by(year) %>% 
+  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Actes colloques")
+
+
+acl4 <- ANX4$i_2_chap_ouvrages %>%
+  clean_names() %>% 
+  mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
+  drop_na(year) %>% 
+  group_by(year) %>% 
+  summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Chapitres ouvrages")
+
+
+# acl5 <- ANX4$ii_3_rapports_expertise %>%
+#   clean_names() %>% 
+#   mutate(year = stringr::str_extract(reference_complete,'\\d{4}')) %>% 
+#   filter(year != 2016) %>% 
+#   drop_na(year) %>% 
+#   group_by(year) %>% 
+#   summarise(n = n_distinct(reference_complete)) %>% spread(key = year, value = n) %>% mutate(Type = "Rapports d'expertise")
+
+bind_rows(acl1,acl2,acl3,acl4) %>% 
+  select(Type,`2017`:`2020`) %>% 
+  gt() %>% 
+  tab_header(title = "Productions de connaissance par ETBX") %>%
+  tab_options(table.width = pct(100))
+
+```
+
+En ce qui concerne les revues, voici un nuage des revues auxquelles sont soumis les articles scientifiques
+
+```{r, width = 10, height = 10, fig.align = "center", out.width = "100%"}
+word_count <- ANX4$i_1_articles_sctfq %>% 
+  clean_names() %>% 
+  group_by(journal) %>% 
+  count() %>% arrange(desc(n)) %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(n = ifelse(journal == "Journal of Water Resources Planning and Management", yes = 7, no = n)) %>% 
+    mutate(journal = ifelse(journal == "Journal of Water Resources Planning and Management", yes = "Water Res. Planning and Management", no = journal)) %>% 
+  ungroup() %>%  mutate(journal = str_to_lower(journal)) %>% 
+  mutate(journal = str_trim(journal))
+
+# wordcloud2(word_count, size = 0.35)
+```
+
+![](wordcloud.png)
+
+Nous pouvons ensuite observer si notre unité est bien identifiée dans les revues dans lesquelles elle publie : 
 
 ```{r}
 
+articles <- ANX4$i_1_articles_sctfq %>% 
+  clean_names() %>% 
+  group_by(journal) %>% 
+  count() %>% arrange(desc(n)) %>% 
+  mutate(journal = str_to_lower(journal)) %>% 
+  mutate(journal = str_trim(journal))
+
+
+
+tab_relecture_articles <- ANX4$i_8_evaluation_articles %>% 
+  clean_names() %>% 
+  select(revue_ouvrage, nombre_de_relectures) %>% 
+  mutate(revue_ouvrage = str_to_lower(revue_ouvrage)) %>% 
+  mutate(revue_ouvrage = str_trim(revue_ouvrage)) %>% 
+  full_join(articles, by = c("revue_ouvrage"="journal")) %>% 
+  arrange(revue_ouvrage) %>% unique() %>% group_by(revue_ouvrage) %>% 
+  summarise(n_relecture = sum(nombre_de_relectures, na.rm=TRUE), n_publi = sum(n, na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  unique()
+
+## On affiche le tableau en ne gardant que les 10 premiers selon 2 critères
+#  tab_relecture_articles %>% 
+#   arrange(desc(n_relecture)) %>% 
+#   slice(1:10) %>% 
+#   gt() %>% 
+#   tab_header(title = "Publications et relectures, tri par # de relectures (top 10)") %>%
+#   tab_options(table.width = pct(100))
+# 
+# tab_relecture_articles %>% 
+#   arrange(desc(n_publi))%>% 
+#   slice(1:10) %>% 
+#   gt() %>% 
+#   tab_header(title = "Publications et relectures, tri par nombre de publications (top 10)") %>%
+#   tab_options(table.width = pct(100))
+
+
+tab_relecture_articles %>%
+  mutate(indicateur_som = n_relecture * n_publi) %>% 
+  arrange(desc(indicateur_som))%>% 
+  slice(1:10) %>% 
+  gt() %>%
+  tab_header(title = "Top 10 selon l'indicateur 'n_relecture x n_publi'") %>%
+  tab_options(table.width = pct(100))
+
+tab_relecture_articles %>%
+  mutate(indicateur_moy = (n_relecture + n_publi)/2) %>% 
+  arrange(desc(indicateur_moy))%>% 
+  slice(1:10) %>% 
+  gt() %>%
+  tab_header(title = "Top 10 selon l'indicateur '(n_relecture + n_publi) / 2'") %>%
+  tab_options(table.width = pct(100))
+```
+
+### Partenariats
+
+#### Interdisciplinarité proche (interne)
+
+A partir du tableau rempli par l'équipe du GT4, nous pouvons créer une liste de noms d'auteurs (prenant en compte toutes les syntaxes possibles d'un même nom) appartenant à ETBX.
+
+```{r}
+table_auteurs <- readxl::read_excel("data/table_auteurs_ETBX_2020-07-27_SL_DC.xlsx") %>% clean_names()
+
+
+liste_auteurs_etbx <- table_auteurs %>% filter(etbx_oui_non %in% c("oui","temporaire", "oui / BSA", "temporaire ?")) %>% 
+  pull(auteur)
+
+
+# liste_auteurs_etbx <- gsub('^\\.|\\.$', '', liste_auteurs_etbx) %>% unique()
+
+liste_auteurs_etbx
+```
+
+Chacun des agents ETBX a aussi été affecté à une discipline, en accord avec les informations présentées sur le site web de l'unité [https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes](https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes).
+
+Nous pouvons donc quantifier le nombre d'auteurs ETBX pour chaque publication :
+
+```{r}
+
+calcul_nb_copubli <- function(x) {
+  liste_auteurs_etbx[str_detect(x,liste_auteurs_etbx)] %>% gsub('^\\.|\\.$', '', .) %>% unique() %>% 
+    length()
+}
+
+ANX4$i_1_articles_sctfq %>% clean_names() %>% 
+  select(reference_complete) %>% 
+  rowwise() %>% 
+  mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% 
+  ungroup() %>% arrange(desc(nb_copubli)) %>% 
+  slice(1:10) %>% 
+  gt() %>%
+  tab_header(title = "Top 10 des publications en nombre d'agents ETBX associés") %>%
+  tab_options(table.width = pct(100))
+```
+
+Nous pouvons maintenant nous intéresser aux disciplines :
+
+```{r}
+table_disciplines <- table_auteurs %>% filter(etbx_oui_non %in% c("oui","temporaire", "oui / BSA", "temporaire ?")) %>% 
+  select(auteur,discipline) %>% drop_na()
+
+
+calcul_discipline <- function(x) {
+  
+  df <- data.frame(auteur = liste_auteurs_etbx[str_detect(x,liste_auteurs_etbx)] %>% gsub('^\\.|\\.$', '', .) %>% unique() )
+  
+  df %>% inner_join(table_disciplines, by = "auteur") %>% pull(discipline) %>% unique() %>% paste(collapse = " / ")
+  
+}
+
+ANX4$i_1_articles_sctfq %>% clean_names() %>% 
+  select(reference_complete) %>% 
+  rowwise() %>% 
+  mutate(disciplines = calcul_discipline(reference_complete)) %>% 
+  mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length) %>% 
+  ungroup() %>% 
+  arrange(desc(nb_disciplines)) %>% 
+  slice(1:10) %>% 
+  gt() %>%
+  tab_header(title = "Top 10 du nombre de disciplines combinées entre agents ETBX") %>%
+  tab_options(table.width = pct(100))
+
+```
+
+#### Interdisciplinarité éloignée (externe)
+
+Cette section nécessite de disposer d'informations sur les affiliations des co-auteurs. Cette information n'est malheureusement pas accessible directement via le tableau excel (stratus) rempli par les collègues. 
+
+Il est donc nécessaire de passer soit :
+
+- par HAL-INRAE, ce qui implique de travailler, forcémment, avec un nombre réduit de publications
+- A partir de notre tableau excel d'affiliation des agents à ETBX / aux disciplines : Rajouter le max d'info sur les co-publiants externes.
+
+#### Export HAL-INRAE :
+
+J'ai testé un export direct de HAL avec 2 critères :
+- Année 2017-2020
+- Unité = ETBX
+
+Et j'ai le nombre d'entrées suivant :
+
+```{r}
 # J'ai testé un export massif HAL-INRAE avec dates 2017-2020 et structure ETBX
 test <- bib2df::bib2df("data/biball.bib")
+
+test %>% group_by(CATEGORY) %>% count()
 ```
 
 
+#### Nombre de citations
+
+A partir de export HAL-INRAE, j'ai pu récupérer `r n_distinct(test$DOI)` DOI, que je pourrais utiliser pour récupérer des données du nombre de citations de chaque article via Scopus. 
+
+Il me reste également à explorer l'approche "Publish or Perish" proposée par Baptiste qui se révèlera peut-être plus exhaustive que Scopus.
+
+L'approche google scholar est pour le moment exclue (nécessité pour chaque agent de créer un compte et de me donner un ID trouvable dans les paramètres).
 
 ## Vision pour chaque onglet
 
