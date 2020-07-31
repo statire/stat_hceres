@@ -379,10 +379,12 @@ tab_relecture_articles <- ANX4$i_8_evaluation_articles %>%
   unique()
 ```
 
-Nous pouvons représenter ces deux variables (nombre de publications / nombre de relectures) sur un même graphique :
+Nous pouvons représenter ces deux variables (nombre de publications / nombre de relectures) sur un même graphique. Dans un soucis de lisibilité, nous ne conservons que les revues pour lesquelles la différence entre les deux variables est supérieure à 1.
 
-```{r out.width = "100%", fig.width = 17, fig.height = 15}
+```{r out.width = "100%", fig.width = 12, fig.height = 10}
 tab_relecture_articles %>%
+  mutate(diff = abs(n_publi - n_relecture)) %>% 
+  filter(diff > 1) %>% 
   ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
   geom_segment(aes(
     x = reorder(revue_ouvrage, -n_publi), xend = reorder(revue_ouvrage, -n_publi),
@@ -391,15 +393,17 @@ tab_relecture_articles %>%
   geom_point(aes(y = n_publi, fill = "Nombre de publications"), color = "black", shape = 21, size = 4, alpha = 0.8) +
   geom_point(aes(y = n_relecture, fill = "Nombre de relectures"), color = "black", shape = 21, size = 4, alpha = 0.8) +
   theme_inrae() +
-  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(x = "Revues", y = "Nombre", fill = "Type") +
   scale_y_continuous(breaks = seq(0, 30, 2))
 ```
 
 Et voici une version alternative avec l'une des variables passée en négatif afin de mieux distinguer les deux variables :
 
-```{r out.width = "100%", fig.width = 17, fig.height = 15}
+```{r out.width = "100%", fig.width = 12, fig.height = 10}
 tab_relecture_articles %>%
+  mutate(diff = abs(n_publi - n_relecture)) %>% 
+  filter(diff > 1) %>% 
   ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
   geom_hline(yintercept = 0, size = 2) +
   geom_segment(aes(
@@ -409,7 +413,7 @@ tab_relecture_articles %>%
   geom_point(aes(y = n_publi, fill = "Nombre de publications"), color = "black", shape = 21, size = 4, alpha = 0.8) +
   geom_point(aes(y = -n_relecture, fill = "Nombre de relectures"), color = "black", shape = 21, size = 4, alpha = 0.8) +
   theme_inrae() +
-  theme(axis.text.x = element_text(angle = 90, size = 10)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(x = "Revues", y = "Nombre", fill = "Type") +
   scale_y_continuous(breaks = seq(-30, 12, 2))
 ```
