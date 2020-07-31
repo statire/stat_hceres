@@ -423,8 +423,28 @@ En ce qui concerne les revues, voici un nuage des revues auxquelles sont
 soumis les articles scientifiques :
 
 ``` r
+clean_revues <- function(x){
+  
+  
+  r <- case_when(x == "water research, elsevier" ~ "water research",
+          x == "water resources research, agu" ~ "water resources research",
+          x == "water science and technology: water supply, iwa" ~ "water science and technology: water supply",
+          x == "vertigo - la revue électronique en sciences de l'environnement 1" ~ "vertigo",
+          x == "revue internationale des etudes du développement" ~ "revue internationale des etudes du developpement",
+          x == "journal of hydroinformatics, iwa" ~ "journal of hydroinformatics",
+          x == TRUE ~ x)
+  
+  if(is.na(r)){return(x)}
+  
+  return(r)
+  
+  
+}
+
+
 word_count <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -447,6 +467,7 @@ les revues dans lesquelles elle publie :
 ``` r
 articles <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -463,6 +484,7 @@ tab_relecture_articles <- ANX4$i_8_evaluation_articles %>%
   full_join(articles, by = c("revue_ouvrage" = "journal")) %>%
   arrange(revue_ouvrage) %>%
   unique() %>%
+  mutate(revue_ouvrage = clean_revues(revue_ouvrage)) %>% 
   group_by(revue_ouvrage) %>%
   summarise(n_relecture = sum(nombre_de_relectures, na.rm = TRUE), n_publi = sum(n, na.rm = TRUE)) %>%
   ungroup() %>%
@@ -603,6 +625,9 @@ calcul_nb_copubli <- function(x) {
     length()
 }
 
+
+
+
 # Top 5
 ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
@@ -637,6 +662,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
   rowwise() %>%
   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
   ungroup() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   summarise(nb_moyen = mean(nb_copubli)) %>%
   ungroup() %>%
@@ -646,6 +672,122 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 ```
 
 ![Nombre moyen de co-auteurs par publication par revue](wordcloud.png)
+
+Grâce à la classification JCR (<https://jcr.clarivate.com>) nous pouvons
+classer les revues selon des grandes catégories disciplinaires. Ci
+dessous un tableau des 48 revues pour lesquelles une correspondance de
+catégorie a pu être récupérée.
+
+``` r
+library(readr)
+
+liste_revues_jcr <- list()
+
+
+for(i in list.files("data/revues")) {
+  
+  nom = str_remove_all(i,".csv")
+
+  liste_revues_jcr[[nom]] <- read_csv(file.path("data/revues/",i), skip = 1) %>% tibble() %>%
+  janitor::clean_names() %>% 
+  select(full_journal_title, total_cites, journal_impact_factor) %>% 
+    mutate(total_cites = as.numeric(total_cites),
+           journal_impact_factor = as.numeric(journal_impact_factor)) %>% 
+    mutate(CATEGORY = nom)
+  
+}
+
+table_jcr <- bind_rows(liste_revues_jcr) %>% mutate(full_journal_title = str_to_lower(full_journal_title)) %>% unique()
+
+
+tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title]
+```
+
+    ##  [1] "agricultural systems"                                 
+    ##  [2] "agricultural water management"                        
+    ##  [3] "annals of forest science"                             
+    ##  [4] "climate policy"                                       
+    ##  [5] "climatic change"                                      
+    ##  [6] "comptes rendus geoscience"                            
+    ##  [7] "computational statistics"                             
+    ##  [8] "ecological economics"                                 
+    ##  [9] "ecological indicators"                                
+    ## [10] "energy economics"                                     
+    ## [11] "energy policy"                                        
+    ## [12] "environment and history"                              
+    ## [13] "environmental management"                             
+    ## [14] "environmental pollution"                              
+    ## [15] "environmental science and pollution research"         
+    ## [16] "european review of agricultural economics"            
+    ## [17] "food policy"                                          
+    ## [18] "forest policy and economics"                          
+    ## [19] "geoforum"                                             
+    ## [20] "international forestry review"                        
+    ## [21] "journal of choice modelling"                          
+    ## [22] "journal of coastal research"                          
+    ## [23] "journal of environmental management"                  
+    ## [24] "journal of environmental planning and management"     
+    ## [25] "journal of environmental policy & planning"           
+    ## [26] "journal of hydraulic engineering"                     
+    ## [27] "journal of hydroinformatics"                          
+    ## [28] "journal of irrigation and drainage engineering"       
+    ## [29] "journal of rural studies"                             
+    ## [30] "journal of water resources planning and management"   
+    ## [31] "journal of wine economics"                            
+    ## [32] "land use policy"                                      
+    ## [33] "landscape and urban planning"                         
+    ## [34] "outlook on agriculture"                               
+    ## [35] "policy sciences"                                      
+    ## [36] "regional environmental change"                        
+    ## [37] "river research and applications"                      
+    ## [38] "silva fennica"                                        
+    ## [39] "small-scale forestry"                                 
+    ## [40] "social indicators research"                           
+    ## [41] "sociologia ruralis"                                   
+    ## [42] "stochastic environmental research and risk assessment"
+    ## [43] "urban water journal"                                  
+    ## [44] "water"                                                
+    ## [45] "water and environment journal"                        
+    ## [46] "water research"                                       
+    ## [47] "water resources and economics"                        
+    ## [48] "water science and technology"
+
+Voici donc le résumé du nombre de publications par catégorie :
+
+``` r
+tab_relecture_articles %>% inner_join(table_jcr, by = c("revue_ouvrage"="full_journal_title")) %>% 
+  group_by(CATEGORY) %>% 
+  count() %>% arrange(desc(n))
+```
+
+<div class="kable-table">
+
+| CATEGORY                                         |  n |
+| :----------------------------------------------- | -: |
+| ENVIRONMENTAL SCIENCES                           | 17 |
+| WATER RESOURCES                                  | 13 |
+| ECONOMICS                                        |  9 |
+| ENVIRONMENTAL STUDIES                            |  9 |
+| ENGINEERING, CIVIL                               |  5 |
+| FORESTRY                                         |  5 |
+| GEOGRAPHY                                        |  4 |
+| REGIONAL & URBAN PLANNING                        |  4 |
+| AGRICULTURAL ECONOMICS & POLICY                  |  3 |
+| ENGINEERING, ENVIRONMENTAL                       |  3 |
+| AGRICULTURE, MULTIDISCIPLINARY                   |  2 |
+| ECOLOGY                                          |  2 |
+| FOOD SCIENCE & TECHNOLOGY                        |  2 |
+| GEOGRAPHY, PHYSICAL                              |  2 |
+| GEOSCIENCES, MULTIDISCIPLINARY                   |  2 |
+| SOCIAL SCIENCES, INTERDISCIPLINARY               |  2 |
+| SOCIOLOGY                                        |  2 |
+| STATISTICS & PROBABILITY                         |  2 |
+| AGRICULTURAL ENGINEERING                         |  1 |
+| AGRONOMY                                         |  1 |
+| COMPUTER SCIENCE, INTERDISCIPLINARY APPLICATIONS |  1 |
+| URBAN STUDIES                                    |  1 |
+
+</div>
 
 Nous pouvons maintenant nous intéresser aux disciplines **(Seul le top 5
 est présenté dans ce document)**.

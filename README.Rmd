@@ -335,8 +335,31 @@ bind_rows(acl1, acl2, acl3, acl4) %>%
 En ce qui concerne les revues, voici un nuage des revues auxquelles sont soumis les articles scientifiques :
 
 ```{r, width = 10, height = 10, fig.align = "center", out.width = "100%"}
+
+
+
+clean_revues <- function(x){
+  
+  
+  r <- case_when(x == "water research, elsevier" ~ "water research",
+          x == "water resources research, agu" ~ "water resources research",
+          x == "water science and technology: water supply, iwa" ~ "water science and technology: water supply",
+          x == "vertigo - la revue électronique en sciences de l'environnement 1" ~ "vertigo",
+          x == "revue internationale des etudes du développement" ~ "revue internationale des etudes du developpement",
+          x == "journal of hydroinformatics, iwa" ~ "journal of hydroinformatics",
+          x == TRUE ~ x)
+  
+  if(is.na(r)){return(x)}
+  
+  return(r)
+  
+  
+}
+
+
 word_count <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -357,6 +380,7 @@ Nous pouvons ensuite observer si notre unité est bien identifiée dans les revu
 ```{r}
 articles <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -373,6 +397,7 @@ tab_relecture_articles <- ANX4$i_8_evaluation_articles %>%
   full_join(articles, by = c("revue_ouvrage" = "journal")) %>%
   arrange(revue_ouvrage) %>%
   unique() %>%
+  mutate(revue_ouvrage = clean_revues(revue_ouvrage)) %>% 
   group_by(revue_ouvrage) %>%
   summarise(n_relecture = sum(nombre_de_relectures, na.rm = TRUE), n_publi = sum(n, na.rm = TRUE)) %>%
   ungroup() %>%
@@ -448,6 +473,9 @@ calcul_nb_copubli <- function(x) {
     length()
 }
 
+
+
+
 # Top 5
 ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
@@ -468,6 +496,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
   rowwise() %>%
   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
   ungroup() %>%
+  mutate(journal = clean_revues(journal)) %>% 
   group_by(journal) %>%
   summarise(nb_moyen = mean(nb_copubli)) %>%
   ungroup() %>%
@@ -477,6 +506,43 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 ```
 
 ![Nombre moyen de co-auteurs par publication par revue](wordcloud.png)
+
+Grâce à la classification JCR (https://jcr.clarivate.com) nous pouvons classer les revues selon des grandes catégories disciplinaires. Ci dessous un tableau des 48 revues pour lesquelles une correspondance de catégorie a pu être récupérée.
+
+```{r categ_jcr}
+library(readr)
+
+liste_revues_jcr <- list()
+
+
+for(i in list.files("data/revues")) {
+  
+  nom = str_remove_all(i,".csv")
+
+  liste_revues_jcr[[nom]] <- read_csv(file.path("data/revues/",i), skip = 1) %>% tibble() %>%
+  janitor::clean_names() %>% 
+  select(full_journal_title, total_cites, journal_impact_factor) %>% 
+    mutate(total_cites = as.numeric(total_cites),
+           journal_impact_factor = as.numeric(journal_impact_factor)) %>% 
+    mutate(CATEGORY = nom)
+  
+}
+
+table_jcr <- bind_rows(liste_revues_jcr) %>% mutate(full_journal_title = str_to_lower(full_journal_title)) %>% unique()
+
+
+tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title]
+
+```
+
+
+Voici donc le résumé du nombre de publications par catégorie :
+
+```{r}
+tab_relecture_articles %>% inner_join(table_jcr, by = c("revue_ouvrage"="full_journal_title")) %>% 
+  group_by(CATEGORY) %>% 
+  count() %>% arrange(desc(n))
+```
 
 Nous pouvons maintenant nous intéresser aux disciplines **(Seul le top 5 est présenté dans ce document)**.
 
@@ -575,6 +641,10 @@ A partir de l'export HAL-INRAE, j'ai pu récupérer `r n_distinct(HAL$doiId_s)` 
 Il me reste également à explorer l'approche "Publish or Perish" proposée par Baptiste qui se révèlera peut-être plus exhaustive que Scopus.
 
 L'approche google scholar est pour le moment exclue (nécessité pour chaque agent de créer un compte et de me donner un ID trouvable dans les paramètres).
+
+
+
+
 
 ## Reste à faire
 
