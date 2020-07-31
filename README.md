@@ -229,22 +229,23 @@ Nous pouvons dans un premier temps représenter graphiquement la
 chronologie des contrats :
 
 ``` r
-## Production du graphique
 ggplot(PRJ, aes(x = date_fin, y = contrat)) +
-  geom_segment(aes(x = date_debut, xend = date_fin, y = contrat, yend = contrat, color = type), size = 3.5) +
+  geom_segment(aes(x = date_debut, xend = date_fin, y = contrat, yend = contrat, color = type, linetype = porteur), size = 1.5) +
   scale_y_discrete(limits = rev(levels(PRJ$contrat))) +
-  geom_point(fill = "black", color = "black", size = 3, aes(shape = porteur)) +
-  geom_point(aes(x = date_debut, y = contrat, shape = porteur), color = "black", fill = "black", size = 3) +
+  geom_point(fill = "black", color = "black", size = 3) +
+  geom_point(aes(x = date_debut, y = contrat), color = "black", fill = "black", size = 3) +
   theme_inrae() +
   theme(axis.text.y = element_text(size = 10)) +
   geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
-  labs(x = "Temps", y = "Contrats", color = "Type de contrat", shape = "ETBX porteur ?")
+  labs(x = "Temps", y = "Contrats", color = "Type de contrat", linetype = "ETBX porteur ?")
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 
 Nous pouvons aussi compter combien de contrats **commencent** chaque
-année :
+année (NB: et qui sont encore en cours sur la période 2017-2020, les
+contrats qui débutent avant 2017 mais qui ont pris fin avant 2017 ne
+sont pas comptabilisés).
 
 ``` r
 PRJ %>%
@@ -271,7 +272,7 @@ PRJ %>%
 
 </div>
 
-Et combien **finissent** chaque année :
+Et combien **finissent** chaque année, à partir de 2017 :
 
 ``` r
 PRJ %>%
@@ -299,7 +300,8 @@ PRJ %>%
 </div>
 
 Nous pouvons enfin quantifier, chaque année, combien de projets sont
-**en cours**.
+**en cours** (NB: Pour les années antérieures à 2017, seuls les contrats
+prenant fin à partir de 2017 sont comptabilisés).
 
 ``` r
 par_an <- PRJ %>%
@@ -783,8 +785,12 @@ paramètres).
 ## Reste à faire
 
   - \[\] Synthèse détaillée par onglet
+  - \[\] Représentation ‘Réseau’ des collaborations (internes et
+    externes)
   - \[\] Catégorisation de la discipline des revues (manuelle ?)
   - \[\] Catégorisation des structures avec lesquelles ETBX co-publie
+  - \[\] Affectation de chaque membre de l’UR à une grande discipline
+    (SHS/SE,SPI et éventuellement autres…)
   - \[\] Recensement des partenaires économiques/externes : Donnée
     inexistante sur le fichier excel, par quel moyen y accéder ?
   - \[\] Focus sur les contrats “nationaux” afin de séparer les ANR,
