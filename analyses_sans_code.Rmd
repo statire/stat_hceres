@@ -4,12 +4,13 @@ output:
   github_document:
     df_print: kable
     toc: true
+    toc_depth: 4
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", dpi = 320)
 ```
 
 # Point du 24/07 sur les objectifs
@@ -44,12 +45,6 @@ Objectif à court terme : Production d'indicateurs généraux, synthétiques pou
 **Envoi le 24/07 d'un dernier mail de rappel pour demander l'ajout d'articles qui seraient acceptés avec modifications mineures à ce jour (et seulement mineures) et rappel pour les derniers retardataires. Ajout d'une colonne 'révision' à cocher pour ces cas spécifiques. Cela concerne publications + ouvrages.**
 
 
-# Import et nettoyage des données
-
-## Import
-
-Dans un premier temps, chargement des packages nécessaires :
-
 ```{r packages}
 library(dplyr)
 library(tidyr)
@@ -61,15 +56,15 @@ library(purrr)
 library(bib2df)
 library(wordcloud2)
 library(stringr)
+library(readr)
 
 source("R/theme_inrae.R")
 ```
 
-Nous pouvons maintenant importer le fichier :
 
 ```{r}
-# Fichier en date du 27/07/2020
-file <- "data/Annexe4_ETBX_complet_2020_07_27.xlsx"
+# Fichier en date du 03/08/2020
+file <- "data/Annexe4_ETBX_complet_2020_08_03.xlsx"
 
 
 # On réalise une boucle pour importer tous les onglets dans un seul objet, sous forme de liste
@@ -87,8 +82,6 @@ names(ANX4) <- janitor::make_clean_names(names(ANX4))
 ```
 
 
-Pour les tableaux avec cases à cocher, on définit une fonction de nettoyage qui permettra lors des synthèses de remplacer les `NA` par des `0` et les `x` par des `1`. Ainsi, nous pourrons faire des sommes etc.
-
 ```{r}
 replace_cases <- function(x) {
   value <- ifelse(is.na(x), yes = 0, no = 1)
@@ -99,7 +92,7 @@ replace_cases <- function(x) {
 
 ## Vision d'ensemble du fichier
 
-Voici un tableau récapitulatif de la dimension des onglets, triés selon le nombre de lignes.
+Voici un tableau récapitulatif de la dimension des onglets, triés selon le nombre de lignes (on ne présente ici que les 10 onglets contenants le plus de lignes).
 
 ```{r}
 tab_dim <- tibble(
@@ -130,7 +123,7 @@ tab_dim %>%
 
 ### Projets
 
-> NB : Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.
+> **NB : Il y a un projet international (le seul) à la fin inconnue... Donc par défaut j'ai décidé la fin en 2024 pour ne pas changer la tête du graphique tout en conservant l'info qu'il y a un projet international.**
 
 ```{r out.width = "100%", fig.width = 13, fig.height = 10}
 
@@ -198,7 +191,7 @@ PRJ <- bind_rows(projets_nationaux, projets_europ) %>%
   mutate(contrat = factor(contrat, levels = unique(contrat)))
 ```
 
-Nous pouvons dans un premier temps représenter graphiquement la chronologie des contrats : 
+Nous pouvons dans un premier temps représenter graphiquement la chronologie des contrats :
 
 ```{r out.width = "100%", fig.width = 15, fig.height = 17}
 ggplot(PRJ, aes(x = date_fin, y = contrat)) +
@@ -211,9 +204,6 @@ ggplot(PRJ, aes(x = date_fin, y = contrat)) +
   geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
   labs(x = "Temps", y = "Contrats", color = "Type de contrat", linetype = "ETBX porteur ?")
 ```
-
-
-
 
 Nous pouvons aussi compter combien de contrats **commencent** chaque année (NB: et qui sont encore en cours sur la période 2017-2020, les contrats qui débutent avant 2017 mais qui ont pris fin avant 2017 ne sont pas comptabilisés).
 
@@ -279,11 +269,14 @@ map(l, count_type) %>%
   mutate_at(vars(`2014`:`2020`), replace_na, 0)
 ```
 
-> NB : Nous notons qu'il semble y avoir un biais assez important entre "contrat" et "projet" : Un même projet peut faire l'objet de plusieurs contrats à différentes temporalités (ex : LYRE, TREFOR, etc.) et / ou pour lesquels ETBX est parfois porteur, parfois non (ex : JUSTBAUX)
+**NB : Nous notons qu'il semble y avoir un biais assez important entre "contrat" et "projet" : Un même projet peut faire l'objet de plusieurs contrats à différentes temporalités (ex : LYRE, TREFOR, etc.) et / ou pour lesquels ETBX est parfois porteur, parfois non (ex : JUSTBAUX)**
 
-> NB2 : Il semble également y avoir un biais sur la catégorie "National", qui inclut à la fois des projets régionaux et des ANR. Il serait probablement intéressant de réaliser un focus sur les projets nationaux (au nombre de `r PRJ %>% filter(type == "National") %>% nrow()`) afin de les catégoriser "manuellement" plus finement : PSDR / ANR, etc. 
+**NB2 : Il semble également y avoir un biais sur la catégorie "National", qui inclut à la fois des projets régionaux et des ANR. Il serait probablement intéressant de réaliser un focus sur les projets nationaux (au nombre de `r PRJ %>% filter(type == "National") %>% nrow()`) afin de les catégoriser "manuellement" plus finement : PSDR / ANR, etc.**
 
 ### Production de connaissances
+
+
+#### Quantification de la production
 
 Nous étudions dans un premier temps le nombre d'articles, d'actes de colloques et de chapitres d'ouvrages publiés par des agents de l'unité.
 
@@ -332,34 +325,54 @@ bind_rows(acl1, acl2, acl3, acl4) %>%
   select(Type, `2017`:`2020`)
 ```
 
+```{r}
+nb_art_ang <- ANX4$i_1_articles_sctfq %>%
+  clean_names() %>%
+  filter(articles_scientifiques_en_anglais_ou_dans_une_autre_langue_etrangere_shs_uniquement == "x") %>%
+  nrow()
+
+
+# ANX4$i_1_autres_articles %>%
+#   clean_names() %>%
+#   filter(autres_articles_articles_publies_dans_des_revues_professionnelles_ou_techniques_etc_en_anglais_ou_dans_une_autre_langue_etrangere_shs_uniquement == "x") %>%
+#   nrow()
+
+nb_ouv_ang <- ANX4$i_2_chap_ouvrages %>%
+  clean_names() %>%
+  filter(chapitres_d_ouvrage_en_anglais_ou_dans_une_autre_langue_etrangere == "x") %>%
+  nrow()
+```
+
+Il y a **`r nb_art_ang`** articles scientifiques et **`r nb_ouv_ang`** chapitres d'ouvrages en langue anglaise.
+
+#### Revues scientifiques
+
 En ce qui concerne les revues, voici un nuage des revues auxquelles sont soumis les articles scientifiques :
 
 ```{r, width = 10, height = 10, fig.align = "center", out.width = "100%"}
 
+clean_revues <- function(x) {
+  r <- case_when(
+    x == "water research, elsevier" ~ "water research",
+    x == "water resources research, agu" ~ "water resources research",
+    x == "water science and technology: water supply, iwa" ~ "water science and technology: water supply",
+    x == "vertigo - la revue électronique en sciences de l'environnement 1" ~ "vertigo",
+    x == "revue internationale des etudes du développement" ~ "revue internationale des etudes du developpement",
+    x == "journal of hydroinformatics, iwa" ~ "journal of hydroinformatics",
+    x == TRUE ~ x
+  )
 
+  if (is.na(r)) {
+    return(x)
+  }
 
-clean_revues <- function(x){
-  
-  
-  r <- case_when(x == "water research, elsevier" ~ "water research",
-          x == "water resources research, agu" ~ "water resources research",
-          x == "water science and technology: water supply, iwa" ~ "water science and technology: water supply",
-          x == "vertigo - la revue électronique en sciences de l'environnement 1" ~ "vertigo",
-          x == "revue internationale des etudes du développement" ~ "revue internationale des etudes du developpement",
-          x == "journal of hydroinformatics, iwa" ~ "journal of hydroinformatics",
-          x == TRUE ~ x)
-  
-  if(is.na(r)){return(x)}
-  
   return(r)
-  
-  
 }
 
 
 word_count <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
-  mutate(journal = clean_revues(journal)) %>% 
+  mutate(journal = clean_revues(journal)) %>%
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -376,11 +389,14 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 
 ![](wordcloud_1.png)
 
+
+
 Nous pouvons ensuite observer si notre unité est bien identifiée dans les revues dans lesquelles elle publie : 
+
 ```{r}
 articles <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
-  mutate(journal = clean_revues(journal)) %>% 
+  mutate(journal = clean_revues(journal)) %>%
   group_by(journal) %>%
   count() %>%
   arrange(desc(n)) %>%
@@ -397,7 +413,7 @@ tab_relecture_articles <- ANX4$i_8_evaluation_articles %>%
   full_join(articles, by = c("revue_ouvrage" = "journal")) %>%
   arrange(revue_ouvrage) %>%
   unique() %>%
-  mutate(revue_ouvrage = clean_revues(revue_ouvrage)) %>% 
+  mutate(revue_ouvrage = clean_revues(revue_ouvrage)) %>%
   group_by(revue_ouvrage) %>%
   summarise(n_relecture = sum(nombre_de_relectures, na.rm = TRUE), n_publi = sum(n, na.rm = TRUE)) %>%
   ungroup() %>%
@@ -408,8 +424,8 @@ Nous pouvons représenter ces deux variables (nombre de publications / nombre de
 
 ```{r out.width = "100%", fig.width = 12, fig.height = 10}
 tab_relecture_articles %>%
-  mutate(diff = abs(n_publi - n_relecture)) %>% 
-  filter(diff > 1) %>% 
+  mutate(diff = abs(n_publi - n_relecture)) %>%
+  filter(diff > 1) %>%
   ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
   geom_segment(aes(
     x = reorder(revue_ouvrage, -n_publi), xend = reorder(revue_ouvrage, -n_publi),
@@ -427,8 +443,8 @@ Et voici une version alternative avec l'une des variables passée en négatif af
 
 ```{r out.width = "100%", fig.width = 12, fig.height = 10}
 tab_relecture_articles %>%
-  mutate(diff = abs(n_publi - n_relecture)) %>% 
-  filter(diff > 1) %>% 
+  mutate(diff = abs(n_publi - n_relecture)) %>%
+  filter(diff > 1) %>%
   ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
   geom_hline(yintercept = 0, size = 2) +
   geom_segment(aes(
@@ -443,6 +459,47 @@ tab_relecture_articles %>%
   scale_y_continuous(breaks = seq(-30, 12, 2))
 ```
 
+
+#### Nombre de citations 
+
+L'information du nombre de citations n'est évidemment pas indiqué dans le document excel. 
+
+Il est cependant possible de récupérer cette information via le portail HAL-INRAE. Ceci implique de travailler, forcément, avec un nombre réduit de publications par rapport au document excel.
+
+Un export de la base HAL a donc été réalisé avec ces deux critères :
+
+- Année 2017-2020
+
+- Unité = ETBX
+
+```{r}
+HAL <- jsonlite::fromJSON("data/ETBX_2017_2020.json")$response$docs %>% tibble()
+```
+
+
+A partir de cet export HAL-INRAE, nous récupérons `r n_distinct(HAL$doiId_s)` DOI, que nous utilisons pour extraire sur scopus le nombre de citations pour chacun de ces documents.
+
+```{r}
+base_doi <- HAL %>%
+  drop_na(doiId_s) %>%
+  distinct(doiId_s)
+
+## On crée la requête
+# base_doi %>%
+#   mutate(request = paste0("DOI(",doiId_s,")")) %>%
+#   pull(request) %>%
+#   paste0(collapse = " OR ")
+```
+
+Cette requête a permis de récupérer des données de citations pour **52** articles. Voici donc, à ce jour, le nombre de citations pour ces articles en fonction de leur année de publication : 
+
+```{r}
+read_csv("data/scopus.csv") %>%
+  clean_names() %>%
+  group_by(year) %>%
+  summarise(n_citations = sum(cited_by, na.rm = TRUE)) %>%
+  select(`Année` = year, n_citations)
+```
 
 ### Partenariats
 
@@ -462,7 +519,9 @@ liste_auteurs_etbx
 
 Chacun des agents ETBX a aussi été affecté à une discipline, en accord avec les informations présentées sur le site web de l'unité [https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes](https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes).
 
-Nous pouvons donc quantifier le nombre d'auteurs ETBX pour chaque publication **(Seul le top 5 est présenté dans ce document)**.
+(Fichier : `table_auteurs_ETBX_2020-07-27_SL_DC.xlsx`).
+
+Nous pouvons donc quantifier le nombre d'auteurs ETBX pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) :
 
 ```{r}
 
@@ -473,21 +532,34 @@ calcul_nb_copubli <- function(x) {
     length()
 }
 
+tab_copubli <- bind_rows(
+  ANX4$i_1_articles_sctfq %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
+    ungroup() %>%
+    arrange(desc(nb_copubli)),
 
 
+  ANX4$i_2_chap_ouvrages %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
+    ungroup() %>%
+    arrange(desc(nb_copubli))
+) %>%
+  filter(nb_copubli > 1)
 
-# Top 5
-ANX4$i_1_articles_sctfq %>%
-  clean_names() %>%
-  select(reference_complete) %>%
-  rowwise() %>%
-  mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
-  ungroup() %>%
-  arrange(desc(nb_copubli)) %>%
-  slice(1:5)
+ggplot(tab_copubli, aes(x = nb_copubli)) +
+  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+  theme_inrae() +
+  scale_y_continuous(breaks = seq(0, 40, 2)) +
+  labs(x = "Nombre de co-auteurs ETBX sur une production scientifique", y = "Fréquence")
 ```
 
-Avec l'information du nombre de co-auteurs, nous pouvons corriger le nuage de mot précédent en le pondérant par le nombre moyen de co-auteurs ETBX par publication pour chaque revue.
+Avec l'information du nombre de co-auteurs, nous pouvons corriger le nuage de revues précédent en le pondérant par le nombre moyen de co-auteurs ETBX par publication pour chaque revue.
 
 ```{r}
 word_count <- ANX4$i_1_articles_sctfq %>%
@@ -496,7 +568,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
   rowwise() %>%
   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
   ungroup() %>%
-  mutate(journal = clean_revues(journal)) %>% 
+  mutate(journal = clean_revues(journal)) %>%
   group_by(journal) %>%
   summarise(nb_moyen = mean(nb_copubli)) %>%
   ungroup() %>%
@@ -510,44 +582,53 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 Grâce à la classification JCR (https://jcr.clarivate.com) nous pouvons classer les revues selon des grandes catégories disciplinaires. Ci dessous un tableau des 48 revues pour lesquelles une correspondance de catégorie a pu être récupérée.
 
 ```{r categ_jcr}
-library(readr)
-
 liste_revues_jcr <- list()
 
 
-for(i in list.files("data/revues")) {
-  
-  nom = str_remove_all(i,".csv")
+for (i in list.files("data/revues")) {
+  nom <- str_remove_all(i, ".csv")
 
-  liste_revues_jcr[[nom]] <- read_csv(file.path("data/revues/",i), skip = 1) %>% tibble() %>%
-  janitor::clean_names() %>% 
-  select(full_journal_title, total_cites, journal_impact_factor) %>% 
-    mutate(total_cites = as.numeric(total_cites),
-           journal_impact_factor = as.numeric(journal_impact_factor)) %>% 
+  liste_revues_jcr[[nom]] <- read_csv(file.path("data/revues/", i), skip = 1) %>%
+    tibble() %>%
+    janitor::clean_names() %>%
+    select(full_journal_title, total_cites, journal_impact_factor) %>%
+    mutate(
+      total_cites = as.numeric(total_cites),
+      journal_impact_factor = as.numeric(journal_impact_factor)
+    ) %>%
     mutate(CATEGORY = nom)
-  
 }
 
-table_jcr <- bind_rows(liste_revues_jcr) %>% mutate(full_journal_title = str_to_lower(full_journal_title)) %>% unique()
+table_jcr <- bind_rows(liste_revues_jcr) %>%
+  mutate(full_journal_title = str_to_lower(full_journal_title)) %>%
+  unique()
 
 
 tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title]
-
 ```
 
+Voici donc le résumé du nombre de publications par catégorie JCR :
 
-Voici donc le résumé du nombre de publications par catégorie :
-
-```{r}
-tab_relecture_articles %>% inner_join(table_jcr, by = c("revue_ouvrage"="full_journal_title")) %>% 
-  group_by(CATEGORY) %>% 
-  count() %>% arrange(desc(n))
+```{r out.width="100%", fig.width = 13, fig.height = 9}
+tab_relecture_articles %>%
+  inner_join(table_jcr, by = c("revue_ouvrage" = "full_journal_title")) %>%
+  group_by(CATEGORY) %>%
+  count() %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(CATEGORY, n), y = n)) +
+  geom_col(fill = "#00a3a6", color = "black") +
+  geom_label(aes(label = n)) +
+  coord_flip() +
+  theme_inrae() +
+  labs(y = "Nombre de publications", x = "Catégorie JCR")
 ```
 
-Nous pouvons maintenant nous intéresser aux disciplines **(Seul le top 5 est présenté dans ce document)**.
+Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons dénombrer le nombre de disciplines mobilisées pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) :
 
 ```{r}
-table_disciplines <- table_auteurs %>%
+
+
+table_disciplines_auteurs <- table_auteurs %>%
   filter(etbx_oui_non %in% c("oui", "temporaire", "oui / BSA")) %>%
   select(auteur, discipline) %>%
   drop_na()
@@ -557,39 +638,59 @@ calcul_discipline <- function(x) {
   df <- data.frame(auteur = liste_auteurs_etbx[str_detect(x, liste_auteurs_etbx)] %>% gsub("^\\.|\\.$", "", .) %>% unique())
 
   df %>%
-    inner_join(table_disciplines, by = "auteur") %>%
+    inner_join(table_disciplines_auteurs, by = "auteur") %>%
     pull(discipline) %>%
     unique() %>%
     paste(collapse = " / ")
 }
 
-# Top 5
-ANX4$i_1_articles_sctfq %>%
-  clean_names() %>%
-  select(reference_complete) %>%
-  rowwise() %>%
-  mutate(disciplines = calcul_discipline(reference_complete)) %>%
-  mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>%
-  ungroup() %>%
-  arrange(desc(nb_disciplines)) %>%
-  slice(1:5)
+tab_disciplines <- bind_rows(
+  ANX4$i_1_articles_sctfq %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(disciplines = calcul_discipline(reference_complete)) %>%
+    mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>%
+    ungroup(),
+
+
+  ANX4$i_2_chap_ouvrages %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(disciplines = calcul_discipline(reference_complete)) %>%
+    mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>%
+    ungroup()
+) %>% filter(nb_disciplines > 1)
+
+
+ggplot(tab_disciplines, aes(x = nb_disciplines)) +
+  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+  theme_inrae() +
+  scale_y_continuous(breaks = seq(0, 40, 2)) +
+  labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence")
 ```
-
-
-Nous pouvons également observer les publications avec plus d'1 auteur ETBX mais mono-disciplinaires :
 
 ```{r}
-mono_dis <- ANX4$i_1_articles_sctfq %>%
-  clean_names() %>%
-  select(reference_complete) %>%
-  rowwise() %>%
-  mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
-  mutate(disciplines = calcul_discipline(reference_complete)) %>%
-  mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>%
+mono_dis <- bind_rows(
+  ANX4$i_1_articles_sctfq %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
+    mutate(disciplines = calcul_discipline(reference_complete)) %>%
+    mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()),
+
+  ANX4$i_2_chap_ouvrages %>%
+    clean_names() %>%
+    select(reference_complete) %>%
+    rowwise() %>%
+    mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
+    mutate(disciplines = calcul_discipline(reference_complete)) %>%
+    mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length())
+) %>%
   filter(nb_copubli > 1 & nb_disciplines == 1)
 ```
-
-Il y a **`r nrow(mono_dis)`** publications avec >2 agents ETBX mais où ces agents sont de la **même discipline**.
 
 ```{r}
 solo <- ANX4$i_1_articles_sctfq %>%
@@ -600,7 +701,11 @@ solo <- ANX4$i_1_articles_sctfq %>%
   filter(nb_copubli == 1)
 ```
 
-Il y a **`r nrow(solo)`** publications où **un seul** agent ETBX est impliqué.
+Autre indicateurs: 
+
+- Il y a **`r nrow(mono_dis)`** publications avec > 2 agents ETBX mais où ces agents sont de la **même discipline**. 
+
+- Il y a **`r nrow(solo)`** publications où **un seul** agent ETBX est impliqué.
 
 #### Interdisciplinarité éloignée (externe)
 
@@ -608,15 +713,13 @@ Cette section nécessite de disposer d'informations sur les affiliations des co-
 
 Il est cependant possible de récupérer une partie de ces informations via HAL-INRAE. Ceci implique de travailler, forcément, avec un nombre réduit de publications.
 
-J'ai testé un export direct de HAL avec 2 critères :
+Un export de la base HAL a été réalisé avec ces deux critères :
 
 - Année 2017-2020
+
 - Unité = ETBX
 
-Et j'ai le nombre d'entrées suivant :
-
 ```{r}
-
 HAL <- jsonlite::fromJSON("data/ETBX_2017_2020.json")$response$docs %>% tibble()
 
 HAL %>%
@@ -629,29 +732,23 @@ HAL %>%
   unlist() %>%
   unique() -> structures
 
-HAL %>% count(docType_s)
+HAL %>%
+  count(docType_s) %>%
+  select(Type = docType_s, N = n)
 ```
 
-Un premier travail de catégorisation manuelle de nos partenaires a été entamé par le GT (B. Rulleau), mais ne donne pour le moment pas suffisamment d'informations pour pousser l'analyse avec ces données.
 
-#### Nombre de citations (A faire)
+Sur les **`r HAL %>% filter(docType_s %in% c("ART", "COUV")) %>% nrow()`** entrées récupérées dans la base HAL, nous obtenons **`r length(structures)`** structures différentes avec lesquelles ETBX co-publie des articles scientifiques ou des chapitres d'ouvrages.
+A partir des données extraites de ces documents, un premier travail de catégorisation manuelle de nos partenaires a été entamé par le GT (B. Rulleau), mais ne donne pour le moment pas suffisamment d'informations pour pousser l'analyse avec ces données.
 
-A partir de l'export HAL-INRAE, j'ai pu récupérer `r n_distinct(HAL$doiId_s)` DOI, que je pourrais utiliser pour récupérer des données du nombre de citations de chaque article via Scopus. 
-
-Il me reste également à explorer l'approche "Publish or Perish" proposée par Baptiste qui se révèlera peut-être plus exhaustive que Scopus.
-
-L'approche google scholar est pour le moment exclue (nécessité pour chaque agent de créer un compte et de me donner un ID trouvable dans les paramètres).
-
-
-
-
+(Fichier : `Structures_Collab.xlsx`).
 
 ## Reste à faire
 
-- [] Synthèse détaillée par onglet
-- [] Représentation 'Réseau' des collaborations (internes et externes)
-- [] Catégorisation de la discipline des revues (manuelle ?)
-- [] Catégorisation des structures avec lesquelles ETBX co-publie
-- [] Affectation de chaque membre de l'UR à une grande discipline (SHS/SE,SPI et éventuellement autres...)
-- [] Recensement des partenaires économiques/externes : Donnée inexistante sur le fichier excel, par quel moyen y accéder ?
-- [] Focus sur les contrats "nationaux" afin de séparer les ANR, projets collectivités, etc.
+- [ ] Synthèse détaillée par onglet
+- [ ] Approche "Publish or Perish" pour les données de citations pour complément de l'approche Scopus
+- [ ] Représentation 'Réseau' des collaborations (internes et externes)
+- [ ] Catégorisation des structures avec lesquelles ETBX co-publie
+- [ ] Affectation de chaque membre de l'UR à une grande discipline (SHS/SE,SPI et éventuellement autres...)
+- [ ] Recensement des partenaires économiques/externes : Donnée inexistante sur le fichier excel.
+- [ ] Focus sur les contrats "nationaux" afin de séparer les ANR, projets collectivités, etc.
