@@ -767,6 +767,24 @@ table_collab %>% count(pays) %>% arrange(desc(n)) %>% drop_na() %>% top_n(10)
 
 Ensuite, nous supposons que la possibilité d'attribuer un sigle à la structure permettait d'identifier la plupart des gros labos avec lesquels on travaille. Ainsi, on dénombre **`r n_distinct(table_collab$sigle)`** sigles uniques de labos avec lesquels nous co-publions.
 
+Les structures avec lesquelles on co-publie majoritairement (n copubli >5)
+
+
+```{r}
+HAL %>%
+  filter(docType_s %in% c("ART", "COUV")) %>%
+  rowwise() %>%
+  mutate(Acronymes = list(c(c_across(contains("Acronym"))))) %>%
+  mutate(Noms = list(c(c_across(contains("StructName"))))) %>%
+  mutate(Pays = list(c(c_across(contains("Country"))))) %>%
+  pull(Noms) %>%
+  unlist() -> aa
+
+
+data.frame(col = aa) %>% count(col) %>% filter(n > 5)
+
+```
+
 
 ## Reste à faire
 

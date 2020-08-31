@@ -477,6 +477,31 @@ structure permettait d’identifier la plupart des gros labos avec
 lesquels on travaille. Ainsi, on dénombre **203** sigles uniques de
 labos avec lesquels nous co-publions.
 
+Les structures avec lesquelles on co-publie majoritairement (n copubli
+\>5)
+
+  - IRSTEA
+  - INRAE
+  - INRA
+  - CNRS
+  - AgroParisTech
+  - Université de Bordeaux
+  - Centre de Coopération Internationale en Recherche Agronomique pour
+    le Développement
+  - Institut national d’études supérieures agronomiques de Montpellier
+  - École des hautes études en sciences sociales  
+  - Ecole Nationale Supérieure des Sciences Agronomiques de
+    Bordeaux-Aquitaine
+  - 3S Consult GmbH  
+  - École Nationale du Génie de l’Eau et de l’Environnement de
+    Strasbourg  
+  - École des Ponts ParisTech  
+  - Gestion Territoriale de l’Eau et de l’environnement  
+  - Université de Montpellier  
+  - Université Sciences et Technologies - Bordeaux 1  
+  - Université Toulouse - Jean Jaurès  
+  - University of Adelaide
+
 ## Reste à faire
 
   - [ ] Synthèse détaillée par onglet
