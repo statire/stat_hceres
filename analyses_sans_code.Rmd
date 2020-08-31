@@ -187,7 +187,7 @@ PRJ <- bind_rows(projets_nationaux, projets_europ) %>%
     type = unique(type)
   ) %>%
   ungroup() %>%
-  arrange(date_debut) %>%
+  arrange(desc(date_debut)) %>%
   mutate(contrat = factor(contrat, levels = unique(contrat)))
 ```
 
@@ -203,6 +203,14 @@ ggplot(PRJ, aes(x = date_fin, y = contrat)) +
   theme(axis.text.y = element_text(size = 10)) +
   geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
   labs(x = "Temps", y = "Contrats", color = "Type de contrat", linetype = "ETBX porteur ?")
+```
+
+Et dénombrer le nombre de contrats pour lesquels ETBX est porteur ou non, ainsi que les types de contrats :
+
+```{r}
+PRJ %>% count(porteur)
+
+PRJ %>% count(type)
 ```
 
 Nous pouvons aussi compter combien de contrats **commencent** chaque année (NB: et qui sont encore en cours sur la période 2017-2020, les contrats qui débutent avant 2017 mais qui ont pris fin avant 2017 ne sont pas comptabilisés).
@@ -436,7 +444,8 @@ tab_relecture_articles %>%
   theme_inrae() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(x = "Revues", y = "Nombre", fill = "Type") +
-  scale_y_continuous(breaks = seq(0, 30, 2))
+  scale_y_continuous(breaks = seq(0, 30, 2)) +
+  labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
 ```
 
 Et voici une version alternative avec l'une des variables passée en négatif afin de mieux distinguer les deux variables :
@@ -456,7 +465,8 @@ tab_relecture_articles %>%
   theme_inrae() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(x = "Revues", y = "Nombre", fill = "Type") +
-  scale_y_continuous(breaks = seq(-30, 12, 2))
+  scale_y_continuous(breaks = seq(-30, 12, 2)) +
+  labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
 ```
 
 
@@ -508,7 +518,7 @@ read_csv("data/scopus.csv") %>%
 A partir du tableau rempli par l'équipe du GT4, nous pouvons créer une liste de noms d'auteurs (prenant en compte toutes les syntaxes possibles d'un même nom) appartenant à ETBX.
 
 ```{r}
-table_auteurs <- readxl::read_excel("data/table_auteurs_ETBX_2020-07-27_SL_DC.xlsx") %>% clean_names()
+table_auteurs <- readxl::read_excel("data/Table_auteurs_ETBX_2020-08-17_BH.xlsx") %>% clean_names()
 
 liste_auteurs_etbx <- table_auteurs %>%
   filter(etbx_oui_non %in% c("oui", "temporaire", "oui / BSA")) %>%
@@ -519,7 +529,7 @@ liste_auteurs_etbx
 
 Chacun des agents ETBX a aussi été affecté à une discipline, en accord avec les informations présentées sur le site web de l'unité [https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes](https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes).
 
-(Fichier : `table_auteurs_ETBX_2020-07-27_SL_DC.xlsx`).
+(Fichier : `table_auteurs_ETBX_2020-08-17_BH.xlsx`).
 
 Nous pouvons donc quantifier le nombre d'auteurs ETBX pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) :
 
@@ -742,6 +752,21 @@ Sur les **`r HAL %>% filter(docType_s %in% c("ART", "COUV")) %>% nrow()`** entr�
 A partir des données extraites de ces documents, un premier travail de catégorisation manuelle de nos partenaires a été entamé par le GT (B. Rulleau), mais ne donne pour le moment pas suffisamment d'informations pour pousser l'analyse avec ces données.
 
 (Fichier : `Structures_Collab.xlsx`).
+
+
+```{r}
+table_collab <- readxl::read_excel("data/Structures_Collab_BH.xlsx") %>% clean_names()
+```
+
+Ci dessous les 10 pays avec lesquels nous collaborons avec le plus de labos (ex : 12 labos UK, 9 labs allemands, etc.)
+
+```{r}
+table_collab %>% count(pays) %>% arrange(desc(n)) %>% drop_na() %>% top_n(10)
+```
+
+
+Ensuite, nous supposons que la possibilité d'attribuer un sigle à la structure permettait d'identifier la plupart des gros labos avec lesquels on travaille. Ainsi, on dénombre **`r n_distinct(table_collab$sigle)`** sigles uniques de labos avec lesquels nous co-publions.
+
 
 ## Reste à faire
 

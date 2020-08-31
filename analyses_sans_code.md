@@ -96,6 +96,30 @@ chronologie des contrats :
 
 <img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 
+Et dénombrer le nombre de contrats pour lesquels ETBX est porteur ou
+non, ainsi que les types de contrats :
+
+<div class="kable-table">
+
+| porteur     |  n |
+| :---------- | -: |
+| Porteur     | 51 |
+| Non porteur | 29 |
+
+</div>
+
+<div class="kable-table">
+
+| type          |  n |
+| :------------ | -: |
+| Européen      |  5 |
+| International |  1 |
+| National      | 52 |
+| PIA           | 15 |
+| R\&D          |  7 |
+
+</div>
+
 Nous pouvons aussi compter combien de contrats **commencent** chaque
 année (NB: et qui sont encore en cours sur la période 2017-2020, les
 contrats qui débutent avant 2017 mais qui ont pris fin avant 2017 ne
@@ -190,12 +214,12 @@ nombre de relectures) sur un même graphique. Dans un soucis de
 lisibilité, nous ne conservons que les revues pour lesquelles la
 différence entre les deux variables est supérieure à 1.
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
 
 Et voici une version alternative avec l’une des variables passée en
 négatif afin de mieux distinguer les deux variables :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-15-1.png" width="100%" />
 
 #### Nombre de citations
 
@@ -297,13 +321,13 @@ Chacun des agents ETBX a aussi été affecté à une discipline, en accord
 avec les informations présentées sur le site web de l’unité
 <https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes>.
 
-(Fichier : `table_auteurs_ETBX_2020-07-27_SL_DC.xlsx`).
+(Fichier : `table_auteurs_ETBX_2020-08-17_BH.xlsx`).
 
 Nous pouvons donc quantifier le nombre d’auteurs ETBX pour chaque
 production scientifique (comprenant les articles scientifiques et les
 chapitres d’ouvrages) :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-19-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-20-1.png" width="100%" />
 
 Avec l’information du nombre de co-auteurs, nous pouvons corriger le
 nuage de revues précédent en le pondérant par le nombre moyen de
@@ -367,14 +391,14 @@ catégorie a pu être récupérée.
 
 Voici donc le résumé du nombre de publications par catégorie JCR :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-21-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-22-1.png" width="100%" />
 
 Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons
 dénombrer le nombre de disciplines mobilisées pour chaque production
 scientifique (comprenant les articles scientifiques et les chapitres
 d’ouvrages) :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-22-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-23-1.png" width="100%" />
 
 Autre indicateurs:
 
@@ -427,6 +451,31 @@ donne pour le moment pas suffisamment d’informations pour pousser
 l’analyse avec ces données.
 
 (Fichier : `Structures_Collab.xlsx`).
+
+Ci dessous les 10 pays avec lesquels nous collaborons avec le plus de
+labos (ex : 12 labos UK, 9 labs allemands, etc.)
+
+<div class="kable-table">
+
+| pays |  n |
+| :--- | -: |
+| UK   | 12 |
+| DE   |  9 |
+| FI   |  8 |
+| AT   |  6 |
+| BE   |  6 |
+| CA   |  6 |
+| NL   |  6 |
+| ZA   |  6 |
+| IT   |  5 |
+| RO   |  5 |
+
+</div>
+
+Ensuite, nous supposons que la possibilité d’attribuer un sigle à la
+structure permettait d’identifier la plupart des gros labos avec
+lesquels on travaille. Ainsi, on dénombre **203** sigles uniques de
+labos avec lesquels nous co-publions.
 
 ## Reste à faire
 
