@@ -480,27 +480,31 @@ labos avec lesquels nous co-publions.
 Les structures avec lesquelles on co-publie majoritairement (n copubli
 \>5)
 
-  - IRSTEA
-  - INRAE
-  - INRA
-  - CNRS
-  - AgroParisTech
-  - Université de Bordeaux
-  - Centre de Coopération Internationale en Recherche Agronomique pour
-    le Développement
-  - Institut national d’études supérieures agronomiques de Montpellier
-  - École des hautes études en sciences sociales  
-  - Ecole Nationale Supérieure des Sciences Agronomiques de
-    Bordeaux-Aquitaine
-  - 3S Consult GmbH  
-  - École Nationale du Génie de l’Eau et de l’Environnement de
-    Strasbourg  
-  - École des Ponts ParisTech  
-  - Gestion Territoriale de l’Eau et de l’environnement  
-  - Université de Montpellier  
-  - Université Sciences et Technologies - Bordeaux 1  
-  - Université Toulouse - Jean Jaurès  
-  - University of Adelaide
+<div class="kable-table">
+
+| structure                                                                                        |   n |
+| :----------------------------------------------------------------------------------------------- | --: |
+| Institut national de recherche en sciences et technologies pour l’environnement et l’agriculture | 228 |
+| Environnement, territoires et infrastructures                                                    | 146 |
+| Centre National de la Recherche Scientifique                                                     |  52 |
+| Institut National de Recherche pour l’Agriculture, l’Alimentation et l’Environnement             |  27 |
+| AgroParisTech                                                                                    |  15 |
+| Institut National de la Recherche Agronomique                                                    |  14 |
+| Université de Bordeaux                                                                           |  14 |
+| Centre de Coopération Internationale en Recherche Agronomique pour le Développement              |  10 |
+| Institut national d’études supérieures agronomiques de Montpellier                               |  10 |
+| École des hautes études en sciences sociales                                                     |   8 |
+| Ecole Nationale Supérieure des Sciences Agronomiques de Bordeaux-Aquitaine                       |   8 |
+| 3S Consult GmbH                                                                                  |   7 |
+| École Nationale du Génie de l’Eau et de l’Environnement de Strasbourg                            |   7 |
+| École des Ponts ParisTech                                                                        |   6 |
+| Gestion Territoriale de l’Eau et de l’environnement                                              |   6 |
+| Université de Montpellier                                                                        |   6 |
+| Université Sciences et Technologies - Bordeaux 1                                                 |   6 |
+| Université Toulouse - Jean Jaurès                                                                |   6 |
+| University of Adelaide                                                                           |   6 |
+
+</div>
 
 ## Reste à faire
 

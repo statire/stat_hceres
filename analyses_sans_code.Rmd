@@ -781,7 +781,7 @@ HAL %>%
   unlist() -> aa
 
 
-data.frame(col = aa) %>% count(col) %>% filter(n > 5)
+data.frame(structure = aa) %>% count(structure) %>% filter(n > 5) %>% arrange(desc(n))
 
 ```
 
