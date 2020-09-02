@@ -184,7 +184,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 
 ```
 
-![](wordcloud_ax3.png)
+![](img/wordcloud_revues_simple_ax3.png)
 
 Nous pouvons ensuite observer si notre unité est bien identifiée dans les revues dans lesquelles elle publie : 
 

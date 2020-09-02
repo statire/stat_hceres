@@ -201,8 +201,8 @@ ggplot(PRJ, aes(x = date_fin, y = contrat)) +
   geom_point(aes(x = date_debut, y = contrat), color = "black", fill = "black", size = 3) +
   theme_inrae() +
   theme(axis.text.y = element_text(size = 10)) +
-  geom_vline(xintercept = as.Date("2020-06-01"), color = "blue", size = 4) +
-  labs(x = "Temps", y = "Contrats", color = "Type de contrat", linetype = "ETBX porteur ?")
+  labs(x = "Temps", y = "Contrats", color = "Type de contrat", linetype = "ETBX porteur ?")  +
+  theme(panel.grid.minor.x = element_blank())
 ```
 
 Et dénombrer le nombre de contrats pour lesquels ETBX est porteur ou non, ainsi que les types de contrats :
@@ -395,7 +395,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 # wordcloud2(word_count, size = 0.35)
 ```
 
-![](wordcloud_1.png)
+![](img/wordcloud_revues_simple.png)
 
 
 
@@ -587,7 +587,7 @@ word_count <- ANX4$i_1_articles_sctfq %>%
 # wordcloud2(word_count, size = 0.35)
 ```
 
-![Nombre moyen de co-auteurs par publication par revue](wordcloud.png)
+![Nombre moyen de co-auteurs par publication par revue](img/wordcloud_revues_pondere.png)
 
 Grâce à la classification JCR (https://jcr.clarivate.com) nous pouvons classer les revues selon des grandes catégories disciplinaires. Ci dessous un tableau des 48 revues pour lesquelles une correspondance de catégorie a pu être récupérée.
 

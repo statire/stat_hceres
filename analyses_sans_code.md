@@ -204,7 +204,7 @@ langue anglaise.
 En ce qui concerne les revues, voici un nuage des revues auxquelles sont
 soumis les articles scientifiques :
 
-![](wordcloud_1.png)
+![](img/wordcloud_revues_simple.png)
 
 Nous pouvons ensuite observer si notre unité est bien identifiée dans
 les revues dans lesquelles elle publie :
@@ -333,7 +333,8 @@ Avec l’information du nombre de co-auteurs, nous pouvons corriger le
 nuage de revues précédent en le pondérant par le nombre moyen de
 co-auteurs ETBX par publication pour chaque revue.
 
-![Nombre moyen de co-auteurs par publication par revue](wordcloud.png)
+![Nombre moyen de co-auteurs par publication par
+revue](img/wordcloud_revues_pondere.png)
 
 Grâce à la classification JCR (<https://jcr.clarivate.com>) nous pouvons
 classer les revues selon des grandes catégories disciplinaires. Ci
