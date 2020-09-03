@@ -36,7 +36,7 @@ langue anglaise.
 En ce qui concerne les revues, voici un nuage des revues auxquelles sont
 soumis les articles scientifiques :
 
-![](wordcloud_ax3.png)
+![](img/wordcloud_revues_simple_ax3.png)
 
 Nous pouvons ensuite observer si notre unité est bien identifiée dans
 les revues dans lesquelles elle publie :

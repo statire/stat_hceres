@@ -363,6 +363,7 @@ clean_revues <- function(x) {
   r <- case_when(
     x == "water research, elsevier" ~ "water research",
     x == "water resources research, agu" ~ "water resources research",
+    x == "water, mdpi journal" ~ "water",
     x == "water science and technology: water supply, iwa" ~ "water science and technology: water supply",
     x == "vertigo - la revue électronique en sciences de l'environnement 1" ~ "vertigo",
     x == "revue internationale des etudes du développement" ~ "revue internationale des etudes du developpement",
