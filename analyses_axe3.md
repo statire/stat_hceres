@@ -7,6 +7,8 @@ HCERES Annexe 4 : Focus sur l’axe 3
             production](#quantification-de-la-production)
           - [Revues scientifiques](#revues-scientifiques)
       - [Partenariats](#partenariats)
+          - [Interdisciplinarité proche
+            (interne)](#interdisciplinarité-proche-interne)
 
 # Exploitation des données
 
@@ -55,320 +57,108 @@ négatif afin de mieux distinguer les deux variables :
 
 ### Partenariats
 
-> **BESOIN LISTE AUTEURS AXE 3 POUR CONTINUER**
-
-<!-- #### Interdisciplinarité proche (interne) -->
-
-<!-- A partir du tableau rempli par l'équipe du GT4, nous pouvons créer une liste de noms d'auteurs (prenant en compte toutes les syntaxes possibles d'un même nom) appartenant à ETBX. -->
-
-<!-- ```{r} -->
-
-<!-- table_auteurs <- readxl::read_excel("data/Table_auteurs_ETBX_2020-08-17_BH.xlsx") %>% clean_names() -->
-
-<!-- liste_auteurs_etbx <- table_auteurs %>% -->
-
-<!--   filter(etbx_oui_non %in% c("oui", "temporaire", "oui / BSA")) %>% -->
-
-<!--   pull(auteur) -->
-
-<!-- liste_auteurs_etbx -->
-
-<!-- ``` -->
-
-<!-- Chacun des agents ETBX a aussi été affecté à une discipline, en accord avec les informations présentées sur le site web de l'unité [https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes](https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes). -->
-
-<!-- (Fichier : `table_auteurs_ETBX_2020-08-17_BH.xlsx`). -->
-
-<!-- Nous pouvons donc quantifier le nombre d'auteurs ETBX pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) : -->
-
-<!-- ```{r} -->
-
-<!-- calcul_nb_copubli <- function(x) { -->
-
-<!--   liste_auteurs_etbx[str_detect(x, liste_auteurs_etbx)] %>% -->
-
-<!--     gsub("^\\.|\\.$", "", .) %>% -->
-
-<!--     unique() %>% -->
-
-<!--     length() -->
-
-<!-- } -->
-
-<!-- tab_copubli <- bind_rows( -->
-
-<!--   ANX4$i_1_articles_sctfq %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--    filter(axe_3 == "x") %>%  -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--     ungroup() %>% -->
-
-<!--     arrange(desc(nb_copubli)), -->
-
-<!--   ANX4$i_2_chap_ouvrages %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--    filter(axe_3 == "x") %>% -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--     ungroup() %>% -->
-
-<!--     arrange(desc(nb_copubli)) -->
-
-<!-- ) %>% -->
-
-<!--   filter(nb_copubli > 1) -->
-
-<!-- ggplot(tab_copubli, aes(x = nb_copubli)) + -->
-
-<!--   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) + -->
-
-<!--   theme_inrae() + -->
-
-<!--   scale_y_continuous(breaks = seq(0, 40, 2)) + -->
-
-<!--   labs(x = "Nombre de co-auteurs ETBX sur une production scientifique", y = "Fréquence") -->
-
-<!-- ``` -->
-
-<!-- Avec l'information du nombre de co-auteurs, nous pouvons corriger le nuage de revues précédent en le pondérant par le nombre moyen de co-auteurs ETBX par publication pour chaque revue. -->
-
-<!-- ```{r} -->
-
-<!-- word_count <- ANX4$i_1_articles_sctfq %>% -->
-
-<!--   clean_names() %>% -->
-
-<!--   filter(axe_3 == "x") %>%  -->
-
-<!--   select(reference_complete, journal) %>% -->
-
-<!--   rowwise() %>% -->
-
-<!--   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--   ungroup() %>% -->
-
-<!--   mutate(journal = clean_revues(journal)) %>% -->
-
-<!--   group_by(journal) %>% -->
-
-<!--   summarise(nb_moyen = mean(nb_copubli)) %>% -->
-
-<!--   ungroup() %>% -->
-
-<!--   arrange(desc(nb_moyen)) -->
-
-<!-- # wordcloud2(word_count, size = 0.35) -->
-
-<!-- ``` -->
-
-<!-- ![Nombre moyen de co-auteurs par publication par revue](wordcloud.png) -->
-
-<!-- Grâce à la classification JCR (https://jcr.clarivate.com) nous pouvons classer les revues selon des grandes catégories disciplinaires. Ci dessous un tableau des 48 revues pour lesquelles une correspondance de catégorie a pu être récupérée. -->
-
-<!-- ```{r categ_jcr} -->
-
-<!-- liste_revues_jcr <- list() -->
-
-<!-- for (i in list.files("data/revues")) { -->
-
-<!--   nom <- str_remove_all(i, ".csv") -->
-
-<!--   liste_revues_jcr[[nom]] <- read_csv(file.path("data/revues/", i), skip = 1) %>% -->
-
-<!--     tibble() %>% -->
-
-<!--     janitor::clean_names() %>% -->
-
-<!--     select(full_journal_title, total_cites, journal_impact_factor) %>% -->
-
-<!--     mutate( -->
-
-<!--       total_cites = as.numeric(total_cites), -->
-
-<!--       journal_impact_factor = as.numeric(journal_impact_factor) -->
-
-<!--     ) %>% -->
-
-<!--     mutate(CATEGORY = nom) -->
-
-<!-- } -->
-
-<!-- table_jcr <- bind_rows(liste_revues_jcr) %>% -->
-
-<!--   mutate(full_journal_title = str_to_lower(full_journal_title)) %>% -->
-
-<!--   unique() -->
-
-<!-- tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title] -->
-
-<!-- ``` -->
-
-<!-- Voici donc le résumé du nombre de publications par catégorie JCR : -->
-
-<!-- ```{r out.width="100%", fig.width = 13, fig.height = 9} -->
-
-<!-- tab_relecture_articles %>% -->
-
-<!--   inner_join(table_jcr, by = c("revue_ouvrage" = "full_journal_title")) %>% -->
-
-<!--   group_by(CATEGORY) %>% -->
-
-<!--   count() %>% -->
-
-<!--   ungroup() %>% -->
-
-<!--   ggplot(aes(x = reorder(CATEGORY, n), y = n)) + -->
-
-<!--   geom_col(fill = "#00a3a6", color = "black") + -->
-
-<!--   geom_label(aes(label = n)) + -->
-
-<!--   coord_flip() + -->
-
-<!--   theme_inrae() + -->
-
-<!--   labs(y = "Nombre de publications", x = "Catégorie JCR") -->
-
-<!-- ``` -->
-
-<!-- Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons dénombrer le nombre de disciplines mobilisées pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) : -->
-
-<!-- ```{r} -->
-
-<!-- table_disciplines_auteurs <- table_auteurs %>% -->
-
-<!--   filter(etbx_oui_non %in% c("oui", "temporaire", "oui / BSA")) %>% -->
-
-<!--   select(auteur, discipline) %>% -->
-
-<!--   drop_na() -->
-
-<!-- calcul_discipline <- function(x) { -->
-
-<!--   df <- data.frame(auteur = liste_auteurs_etbx[str_detect(x, liste_auteurs_etbx)] %>% gsub("^\\.|\\.$", "", .) %>% unique()) -->
-
-<!--   df %>% -->
-
-<!--     inner_join(table_disciplines_auteurs, by = "auteur") %>% -->
-
-<!--     pull(discipline) %>% -->
-
-<!--     unique() %>% -->
-
-<!--     paste(collapse = " / ") -->
-
-<!-- } -->
-
-<!-- tab_disciplines <- bind_rows( -->
-
-<!--   ANX4$i_1_articles_sctfq %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(disciplines = calcul_discipline(reference_complete)) %>% -->
-
-<!--     mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>% -->
-
-<!--     ungroup(), -->
-
-<!--   ANX4$i_2_chap_ouvrages %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(disciplines = calcul_discipline(reference_complete)) %>% -->
-
-<!--     mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) %>% -->
-
-<!--     ungroup() -->
-
-<!-- ) %>% filter(nb_disciplines > 1) -->
-
-<!-- ggplot(tab_disciplines, aes(x = nb_disciplines)) + -->
-
-<!--   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) + -->
-
-<!--   theme_inrae() + -->
-
-<!--   scale_y_continuous(breaks = seq(0, 40, 2)) + -->
-
-<!--   labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence") -->
-
-<!-- ``` -->
-
-<!-- ```{r} -->
-
-<!-- mono_dis <- bind_rows( -->
-
-<!--   ANX4$i_1_articles_sctfq %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--     mutate(disciplines = calcul_discipline(reference_complete)) %>% -->
-
-<!--     mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()), -->
-
-<!--   ANX4$i_2_chap_ouvrages %>% -->
-
-<!--     clean_names() %>% -->
-
-<!--     select(reference_complete) %>% -->
-
-<!--     rowwise() %>% -->
-
-<!--     mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--     mutate(disciplines = calcul_discipline(reference_complete)) %>% -->
-
-<!--     mutate(nb_disciplines = str_split(disciplines, " / ")[[1]] %>% length()) -->
-
-<!-- ) %>% -->
-
-<!--   filter(nb_copubli > 1 & nb_disciplines == 1) -->
-
-<!-- ``` -->
-
-<!-- ```{r} -->
-
-<!-- solo <- ANX4$i_1_articles_sctfq %>% -->
-
-<!--   clean_names() %>% -->
-
-<!--   select(reference_complete) %>% -->
-
-<!--   rowwise() %>% -->
-
-<!--   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>% -->
-
-<!--   filter(nb_copubli == 1) -->
-
-<!-- ``` -->
+#### Interdisciplinarité proche (interne)
+
+A partir du tableau rempli par l’équipe du GT4, nous pouvons créer une
+liste de noms d’auteurs (prenant en compte toutes les syntaxes possibles
+d’un même nom) appartenant à ETBX. **Nous effectuons une sous-sélection
+des agents en ne conservant que ceux rattachés à l’axe 3.**
+
+    ##  [1] "Boschet C"           "Boschet, C"          "Caillaud, K."       
+    ##  [4] "Carayon, D"          "Dachary Bernard, J"  "Dachary Bernard, J."
+    ##  [7] "Dachary-Bernard, J"  "Dachary-Bernard, J." "Gilbert, D"         
+    ## [10] "Husson, A"           "Husson, A."          "Kuentz Simonet, V"  
+    ## [13] "Kuentz-Simonet V"    "Kuentz-Simonet, V"   "Leccia Phelpin, O"  
+    ## [16] "Leccia-Phelpin, O"   "Leccia, O"           "Leccia, O."         
+    ## [19] "Le Gat, Y"           "Le Gat, Y."          "Lescot J-M."        
+    ## [22] "Lescot J.-M"         "Lescot, J.M"         "Lescot, J.M."       
+    ## [25] "Lyser S."            "Lyser, S"            "Lyser, S."          
+    ## [28] "Piller O"            "Piller, O"           "Piller, O."         
+    ## [31] "Rambonilaza T"       "Rambonilaza T."      "Rambonilaza, M"     
+    ## [34] "Rambonilaza, T"      "Rambonilaza, T."     "Renaud, E"          
+    ## [37] "Renaud, E."          "Rulleau, B"          "Rulleau, B."        
+    ## [40] "Salles D"            "Salles, D"           "Salles, D."         
+    ## [43] "Stricker, A. E"      "Stricker, A. E."     "Stricker, A.E"      
+    ## [46] "Stricker, A.E."      "Terreaux, J.P"       "Terreaux, J.P."
+
+Chacun des agents ETBX a aussi été affecté à une discipline, en accord
+avec les informations présentées sur le site web de l’unité
+<https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes>.
+
+(Fichier : `table_auteurs_ETBX_2020-08-17_BH.xlsx`).
+
+Nous pouvons donc quantifier le nombre d’auteurs ETBX pour chaque
+production scientifique (comprenant les articles scientifiques et les
+chapitres d’ouvrages) :
+
+<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+
+Avec l’information du nombre de co-auteurs, nous pouvons corriger le
+nuage de revues précédent en le pondérant par le nombre moyen de
+co-auteurs ETBX par publication pour chaque revue.
+
+![Nombre moyen de co-auteurs par publication par
+revue](img/wordcloud_revues_pondere_ax3.png)
+
+Grâce à la classification JCR (<https://jcr.clarivate.com>) nous pouvons
+classer les revues selon des grandes catégories disciplinaires. Ci
+dessous un tableau des 48 revues pour lesquelles une correspondance de
+catégorie a pu être récupérée.
+
+    ##  [1] "agricultural systems"                                 
+    ##  [2] "agricultural water management"                        
+    ##  [3] "annals of forest science"                             
+    ##  [4] "climate policy"                                       
+    ##  [5] "climatic change"                                      
+    ##  [6] "comptes rendus geoscience"                            
+    ##  [7] "computational statistics"                             
+    ##  [8] "ecological economics"                                 
+    ##  [9] "ecological indicators"                                
+    ## [10] "energy economics"                                     
+    ## [11] "energy policy"                                        
+    ## [12] "environmental pollution"                              
+    ## [13] "environmental science and pollution research"         
+    ## [14] "european review of agricultural economics"            
+    ## [15] "forest policy and economics"                          
+    ## [16] "journal of choice modelling"                          
+    ## [17] "journal of coastal research"                          
+    ## [18] "journal of environmental management"                  
+    ## [19] "journal of environmental planning and management"     
+    ## [20] "journal of environmental policy & planning"           
+    ## [21] "journal of hydraulic engineering"                     
+    ## [22] "journal of hydroinformatics"                          
+    ## [23] "journal of irrigation and drainage engineering"       
+    ## [24] "journal of water resources planning and management"   
+    ## [25] "land use policy"                                      
+    ## [26] "landscape and urban planning"                         
+    ## [27] "regional environmental change"                        
+    ## [28] "river research and applications"                      
+    ## [29] "silva fennica"                                        
+    ## [30] "small-scale forestry"                                 
+    ## [31] "social indicators research"                           
+    ## [32] "stochastic environmental research and risk assessment"
+    ## [33] "urban water journal"                                  
+    ## [34] "water"                                                
+    ## [35] "water and environment journal"                        
+    ## [36] "water research"                                       
+    ## [37] "water resources and economics"                        
+    ## [38] "water science and technology"
+
+Voici donc le résumé du nombre de publications par catégorie JCR :
+
+<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+
+Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons
+dénombrer le nombre de disciplines mobilisées pour chaque production
+scientifique (comprenant les articles scientifiques et les chapitres
+d’ouvrages) :
+
+<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+
+Autre indicateurs:
+
+  - Il y a **3** publications avec \> 2 agents ETBX (de l’axe 3) mais où
+    ces agents sont de la **même discipline**.
+
+  - Il y a **48** publications où **un seul** agent ETBX de l’axe 3 est
+    impliqué.
