@@ -58,9 +58,6 @@ replace_cases <- function(x) {
 }
 ```
 
-
-
-
 # Exploitation des données
 
 ### Production de connaissances
@@ -77,7 +74,7 @@ acl1 <- ANX4$i_1_articles_sctfq %>%
   drop_na(year) %>%
   group_by(year) %>%
   summarise(n = n_distinct(reference_complete)) %>%
-  spread(key = year, value = n) %>%
+  spread(key = year, value = n, fill = 0) %>%
   mutate(Type = "Articles")
 
 
@@ -89,7 +86,7 @@ acl2 <- ANX4$i_1_autres_articles %>%
   drop_na(year) %>%
   group_by(year) %>%
   summarise(n = n_distinct(reference_complete)) %>%
-  spread(key = year, value = n) %>%
+  spread(key = year, value = n, fill = 0) %>%
   mutate(Type = "Autres articles")
 
 
@@ -100,7 +97,7 @@ acl3 <- ANX4$i_3_articles_actes_colloq %>%
   drop_na(year) %>%
   group_by(year) %>%
   summarise(n = n_distinct(reference_complete)) %>%
-  spread(key = year, value = n) %>%
+  spread(key = year, value = n, fill = 0) %>%
   mutate(Type = "Actes colloques")
 
 
@@ -111,7 +108,7 @@ acl4 <- ANX4$i_2_chap_ouvrages %>%
   drop_na(year) %>%
   group_by(year) %>%
   summarise(n = n_distinct(reference_complete)) %>%
-  spread(key = year, value = n) %>%
+  spread(key = year, value = n, fill = 0) %>%
   mutate(Type = "Chapitres ouvrages")
 
 bind_rows(acl1, acl2, acl3, acl4) %>%
@@ -125,12 +122,6 @@ nb_art_ang <- ANX4$i_1_articles_sctfq %>%
   filter(articles_scientifiques_en_anglais_ou_dans_une_autre_langue_etrangere_shs_uniquement == "x") %>%
   nrow()
 
-
-# ANX4$i_1_autres_articles %>%
-#   clean_names() %>%
-#   filter(autres_articles_articles_publies_dans_des_revues_professionnelles_ou_techniques_etc_en_anglais_ou_dans_une_autre_langue_etrangere_shs_uniquement == "x") %>%
-#   nrow()
-
 nb_ouv_ang <- ANX4$i_2_chap_ouvrages %>%
   clean_names() %>%
   filter(axe_3 == "x") %>% 
@@ -138,7 +129,7 @@ nb_ouv_ang <- ANX4$i_2_chap_ouvrages %>%
   nrow()
 ```
 
-Il y a **`r nb_art_ang`** articles scientifiques et **`r nb_ouv_ang`** chapitres d'ouvrages en langue anglaise.
+Production en langue anglaise : **`r nb_art_ang`** articles scientifiques et **`r nb_ouv_ang`** chapitres d'ouvrages.
 
 #### Revues scientifiques
 
@@ -236,34 +227,9 @@ tab_relecture_articles %>%
   labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
 ```
 
-Et voici une version alternative avec l'une des variables passée en négatif afin de mieux distinguer les deux variables :
-
-```{r out.width = "100%", fig.width = 12, fig.height = 10}
-tab_relecture_articles %>%
-  mutate(diff = abs(n_publi - n_relecture)) %>%
-  filter(diff > 1) %>%
-  ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
-  geom_hline(yintercept = 0, size = 2) +
-  geom_segment(aes(
-    x = reorder(revue_ouvrage, -n_publi), xend = reorder(revue_ouvrage, -n_publi),
-    y = n_publi, yend = -n_relecture
-  )) +
-  geom_point(aes(y = n_publi, fill = "Nombre de publications"), color = "black", shape = 21, size = 4, alpha = 0.8) +
-  geom_point(aes(y = -n_relecture, fill = "Nombre de relectures"), color = "black", shape = 21, size = 4, alpha = 0.8) +
-  theme_inrae() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Revues", y = "Nombre", fill = "Type") +
-  scale_y_continuous(breaks = seq(-30, 12, 2)) +
-  labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
-```
-
 ### Partenariats
 
-
-
 #### Interdisciplinarité proche (interne)
-
-
 
 A partir du tableau rempli par l'équipe du GT4, nous pouvons créer une liste de noms d'auteurs (prenant en compte toutes les syntaxes possibles d'un même nom) appartenant à ETBX.
 **Nous effectuons une sous-sélection des agents en ne conservant que ceux rattachés à l'axe 3.**
@@ -323,11 +289,15 @@ tab_copubli <- bind_rows(
 ) %>%
   filter(nb_copubli > 1)
 
-ggplot(tab_copubli, aes(x = nb_copubli)) +
-  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
-  theme_inrae() +
-  scale_y_continuous(breaks = seq(0, 40, 2)) +
-  labs(x = "Nombre de co-auteurs ETBX de l'axe 3 sur une production scientifique", y = "Fréquence")
+# ggplot(tab_copubli, aes(x = nb_copubli)) +
+#   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+#   theme_inrae() +
+#   scale_y_continuous(breaks = seq(0, 40, 2)) +
+#   labs(x = "Nombre de co-auteurs ETBX de l'axe 3 sur une production scientifique", y = "Fréquence")
+
+tab_copubli %>% count(nb_copubli) %>% rename("Nombre de co-auteurs ETBX de l'axe 3 sur une production scientifique"="nb_copubli","Fréquence"="n")
+
+
 ```
 
 Avec l'information du nombre de co-auteurs, nous pouvons corriger le nuage de revues précédent en le pondérant par le nombre moyen de co-auteurs ETBX par publication pour chaque revue.
@@ -437,18 +407,24 @@ tab_disciplines <- bind_rows(
 ) %>% filter(nb_disciplines > 1)
 
 
-ggplot(tab_disciplines, aes(x = nb_disciplines)) +
-  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
-  theme_inrae() +
-  scale_y_continuous(breaks = seq(0, 40, 2)) +
-  scale_x_continuous(breaks = c(0,2,3)) +
-  labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence")
+
+tab_disciplines %>% 
+  count(nb_disciplines) %>% 
+  rename("Nombre de disciplines impliquées sur une production scientifique" = "nb_disciplines","Fréquence"="n")
+
+# ggplot(tab_disciplines, aes(x = nb_disciplines)) +
+#   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+#   theme_inrae() +
+#   scale_y_continuous(breaks = seq(0, 40, 2)) +
+#   scale_x_continuous(breaks = c(0,2,3)) +
+#   labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence")
 ```
 
 ```{r}
 mono_dis <- bind_rows(
   ANX4$i_1_articles_sctfq %>%
     clean_names() %>%
+    filter(axe_3 == "x") %>% 
     select(reference_complete) %>%
     rowwise() %>%
     mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
@@ -469,12 +445,13 @@ mono_dis <- bind_rows(
 ```{r}
 solo <- ANX4$i_1_articles_sctfq %>%
   clean_names() %>%
+  filter(axe_3 == "x") %>% 
   select(reference_complete) %>%
   rowwise() %>%
   mutate(nb_copubli = calcul_nb_copubli(reference_complete)) %>%
-  filter(nb_copubli == 1)
+  ungroup() %>% 
+  filter(nb_copubli == 1) 
 ```
-
 
 Autre indicateurs: 
 

@@ -13,37 +13,6 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", dpi = 320)
 ```
 
-# Point du 24/07 sur les objectifs
-
-**Objectif**: Définir des extractions pertinentes (indicateurs, Figures, tableaux) pour alimenter la rédaction du rapport
-
-Travail au niveau Global UR / dans un second temps par axe.
-
-Plusieurs volets à exploiter :
-
-- **Production de connaissances**
-
-  - Articles (ACL ou non)
-  - Chapitres d'ouvrages
-  - Identification dans les revues
-
-- **Production "appliquée"**
-
-  - Rapports scientifiques
-  - Vulgarisation
-  - Travail sur les partenaires économiques
-
-- **Partenariats**
-
-  - Travail sur les co-publications au sein de l'UR (réseau?) et catégorisation manuelle des disciplines de chaque agent.
-  - Travail sur les co-publications avec d'autres labos (les labos sont donc à catégoriser également)
-
-> NB : Interdisciplinaire = SHS / SE / SPI
-
-Objectif à court terme : Production d'indicateurs généraux, synthétiques pour chaque onglet du document excel.
-
-**Envoi le 24/07 d'un dernier mail de rappel pour demander l'ajout d'articles qui seraient acceptés avec modifications mineures à ce jour (et seulement mineures) et rappel pour les derniers retardataires. Ajout d'une colonne 'révision' à cocher pour ces cas spécifiques. Cela concerne publications + ouvrages.**
-
 
 ```{r packages}
 library(dplyr)
@@ -57,6 +26,7 @@ library(bib2df)
 library(wordcloud2)
 library(stringr)
 library(readr)
+library(tidytext)
 
 source("R/theme_inrae.R")
 ```
@@ -88,33 +58,6 @@ replace_cases <- function(x) {
 
   return(value)
 }
-```
-
-## Vision d'ensemble du fichier
-
-Voici un tableau récapitulatif de la dimension des onglets, triés selon le nombre de lignes (on ne présente ici que les 10 onglets contenants le plus de lignes).
-
-```{r}
-tab_dim <- tibble(
-  Onglet = names(ANX4),
-  nb_lignes = map_dbl(ANX4, nrow),
-  nb_colonnes = map_dbl(ANX4, ncol)
-) %>%
-  arrange(desc(nb_lignes))
-
-
-# On ne va garder que les onglets qui ne sont pas vides.
-# Les onglets à 2 lignes sont à chaque fois vide (car la colonne n° a été remplie pour 1 et 2)
-# sauf pour 4 onglets particuliers qui sont ici rajoutés.
-Onglets_non_empty <- tab_dim %>%
-  filter(nb_lignes != 2) %>%
-  pull(Onglet) %>%
-  c("ii_3_activ_consult", "iii_1_elearning", "i_9_contrats_internationaux", "i_1_articles_synth")
-
-# On affiche le tableau (Seulement le top 10)
-tab_dim %>%
-  filter(Onglet %in% Onglets_non_empty) %>%
-  slice(1:10)
 ```
 
 # Exploitation des données
@@ -277,10 +220,6 @@ map(l, count_type) %>%
   mutate_at(vars(`2014`:`2020`), replace_na, 0)
 ```
 
-**NB : Nous notons qu'il semble y avoir un biais assez important entre "contrat" et "projet" : Un même projet peut faire l'objet de plusieurs contrats à différentes temporalités (ex : LYRE, TREFOR, etc.) et / ou pour lesquels ETBX est parfois porteur, parfois non (ex : JUSTBAUX)**
-
-**NB2 : Il semble également y avoir un biais sur la catégorie "National", qui inclut à la fois des projets régionaux et des ANR. Il serait probablement intéressant de réaliser un focus sur les projets nationaux (au nombre de `r PRJ %>% filter(type == "National") %>% nrow()`) afin de les catégoriser "manuellement" plus finement : PSDR / ANR, etc.**
-
 ### Production de connaissances
 
 
@@ -351,7 +290,7 @@ nb_ouv_ang <- ANX4$i_2_chap_ouvrages %>%
   nrow()
 ```
 
-Il y a **`r nb_art_ang`** articles scientifiques et **`r nb_ouv_ang`** chapitres d'ouvrages en langue anglaise.
+Production en langue anglaise : **`r nb_art_ang`** articles scientifiques et **`r nb_ouv_ang`** chapitres d'ouvrages.
 
 #### Revues scientifiques
 
@@ -449,28 +388,6 @@ tab_relecture_articles %>%
   labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
 ```
 
-Et voici une version alternative avec l'une des variables passée en négatif afin de mieux distinguer les deux variables :
-
-```{r out.width = "100%", fig.width = 12, fig.height = 10}
-tab_relecture_articles %>%
-  mutate(diff = abs(n_publi - n_relecture)) %>%
-  filter(diff > 1) %>%
-  ggplot(aes(x = reorder(revue_ouvrage, -n_publi))) +
-  geom_hline(yintercept = 0, size = 2) +
-  geom_segment(aes(
-    x = reorder(revue_ouvrage, -n_publi), xend = reorder(revue_ouvrage, -n_publi),
-    y = n_publi, yend = -n_relecture
-  )) +
-  geom_point(aes(y = n_publi, fill = "Nombre de publications"), color = "black", shape = 21, size = 4, alpha = 0.8) +
-  geom_point(aes(y = -n_relecture, fill = "Nombre de relectures"), color = "black", shape = 21, size = 4, alpha = 0.8) +
-  theme_inrae() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Revues", y = "Nombre", fill = "Type") +
-  scale_y_continuous(breaks = seq(-30, 12, 2)) +
-  labs(caption = "NB : par souci de lisibilité, seules les revues pour lesquelles la différence entre les deux variables est supérieure à 1 sont affichées")
-```
-
-
 #### Nombre de citations 
 
 L'information du nombre de citations n'est évidemment pas indiqué dans le document excel. 
@@ -524,8 +441,6 @@ table_auteurs <- readxl::read_excel("data/Table_auteurs_ETBX_2020-08-17_BH.xlsx"
 liste_auteurs_etbx <- table_auteurs %>%
   filter(etbx_oui_non %in% c("oui", "temporaire", "oui / BSA")) %>%
   pull(auteur)
-
-liste_auteurs_etbx
 ```
 
 Chacun des agents ETBX a aussi été affecté à une discipline, en accord avec les informations présentées sur le site web de l'unité [https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes](https://www6.bordeaux-aquitaine.inrae.fr/etbx/Les-equipes).
@@ -562,12 +477,16 @@ tab_copubli <- bind_rows(
     arrange(desc(nb_copubli))
 ) %>%
   filter(nb_copubli > 1)
+# 
+# ggplot(tab_copubli, aes(x = nb_copubli)) +
+#   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+#   theme_inrae() +
+#   scale_y_continuous(breaks = seq(0, 40, 2)) +
+#   labs(x = "Nombre de co-auteurs ETBX sur une production scientifique", y = "Fréquence")
 
-ggplot(tab_copubli, aes(x = nb_copubli)) +
-  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
-  theme_inrae() +
-  scale_y_continuous(breaks = seq(0, 40, 2)) +
-  labs(x = "Nombre de co-auteurs ETBX sur une production scientifique", y = "Fréquence")
+
+tab_copubli %>% count(nb_copubli) %>% rename("Nombre de co-auteurs ETBX sur une production scientifique"="nb_copubli","Fréquence"="n")
+
 ```
 
 Avec l'information du nombre de co-auteurs, nous pouvons corriger le nuage de revues précédent en le pondérant par le nombre moyen de co-auteurs ETBX par publication pour chaque revue.
@@ -615,7 +534,7 @@ table_jcr <- bind_rows(liste_revues_jcr) %>%
   unique()
 
 
-tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title]
+# tab_relecture_articles$revue_ouvrage[tab_relecture_articles$revue_ouvrage %in% table_jcr$full_journal_title]
 ```
 
 Voici donc le résumé du nombre de publications par catégorie JCR :
@@ -633,6 +552,7 @@ tab_relecture_articles %>%
   theme_inrae() +
   labs(y = "Nombre de publications", x = "Catégorie JCR")
 ```
+
 
 Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons dénombrer le nombre de disciplines mobilisées pour chaque production scientifique (comprenant les articles scientifiques et les chapitres d'ouvrages) :
 
@@ -675,11 +595,16 @@ tab_disciplines <- bind_rows(
 ) %>% filter(nb_disciplines > 1)
 
 
-ggplot(tab_disciplines, aes(x = nb_disciplines)) +
-  geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
-  theme_inrae() +
-  scale_y_continuous(breaks = seq(0, 40, 2)) +
-  labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence")
+
+tab_disciplines %>% 
+  count(nb_disciplines) %>% 
+  rename("Nombre de disciplines impliquées sur une production scientifique" = "nb_disciplines","Fréquence"="n")
+
+# ggplot(tab_disciplines, aes(x = nb_disciplines)) +
+#   geom_histogram(fill = "#00a3a6", color = "black", binwidth = 1) +
+#   theme_inrae() +
+#   scale_y_continuous(breaks = seq(0, 40, 2)) +
+#   labs(x = "Nombre de disciplines impliquées sur une production scientifique", y = "Fréquence")
 ```
 
 ```{r}
@@ -715,7 +640,6 @@ solo <- ANX4$i_1_articles_sctfq %>%
 Autre indicateurs: 
 
 - Il y a **`r nrow(mono_dis)`** publications avec > 2 agents ETBX mais où ces agents sont de la **même discipline**. 
-
 - Il y a **`r nrow(solo)`** publications où **un seul** agent ETBX est impliqué.
 
 #### Interdisciplinarité éloignée (externe)
@@ -729,6 +653,8 @@ Un export de la base HAL a été réalisé avec ces deux critères :
 - Année 2017-2020
 
 - Unité = ETBX
+
+Et nous obtenons le nombre d'entrées suivant :
 
 ```{r}
 HAL <- jsonlite::fromJSON("data/ETBX_2017_2020.json")$response$docs %>% tibble()
@@ -749,7 +675,7 @@ HAL %>%
 ```
 
 
-Sur les **`r HAL %>% filter(docType_s %in% c("ART", "COUV")) %>% nrow()`** entrées récupérées dans la base HAL, nous obtenons **`r length(structures)`** structures différentes avec lesquelles ETBX co-publie des articles scientifiques ou des chapitres d'ouvrages.
+Sur les **`r HAL %>% filter(docType_s %in% c("ART", "COUV")) %>% nrow()`** entrées (Articles + Chapitres d'ouvrages) récupérées dans la base HAL, nous obtenons **`r length(structures)`** structures différentes avec lesquelles ETBX co-publie des articles scientifiques ou des chapitres d'ouvrages.
 A partir des données extraites de ces documents, un premier travail de catégorisation manuelle de nos partenaires a été entamé par le GT (B. Rulleau), mais ne donne pour le moment pas suffisamment d'informations pour pousser l'analyse avec ces données.
 
 (Fichier : `Structures_Collab.xlsx`).
@@ -786,13 +712,95 @@ data.frame(structure = aa) %>% count(structure) %>% filter(n > 5) %>% arrange(de
 
 ```
 
+## Graphes supplémentaires (intro du rapport)
+
+### RH
+
+```{r fig.width = 10, fig.height = 7}
+RH_data <- readxl::read_excel("data/Personnels.xlsx") %>% 
+  gather(key = annee, value = n, -Equipe,-Statut)
+
+
+RH_data %>% 
+  ggplot(aes(x = annee, y = n)) +
+  geom_col(aes(fill = Statut), color = "black") +
+  facet_wrap(~Equipe) +
+  theme_inrae() +
+  scale_fill_brewer(palette = "Set3") +
+  scale_y_continuous(breaks = seq(0,65,5)) +
+  labs(y = "Effectifs") +
+  theme(axis.title.x = element_blank())
+
+```
+
+### Ressources
+
+```{r fig.width = 10, fig.height = 13}
+ress <- read_excel("data/financements.xlsx") %>% 
+  gather(key = annee, value = financement, -Type) %>% mutate(Type = recode(Type, "Fondations, associations caritatives, Institut Carnot, RTRA, RTRS
+"="Fondations, associations caritatives,\n Institut Carnot, RTRA, RTRS
+"))
+
+ress %>% group_by(annee) %>% mutate(prop = financement / sum(financement)) %>% ungroup() %>% 
+
+ggplot(aes(x = reorder_within(Type,prop,annee), y = prop)) +
+  geom_col(aes(fill = Type), color = "black") +
+  scale_x_reordered(name = "Proportion") +
+  guides(fill = FALSE) +
+  geom_label(aes(label = paste0(round(prop*100),"%"))) +
+  facet_wrap(~annee, drop = TRUE, scales = "free_y", ncol = 1) +
+  scale_y_continuous(labels = scales::label_percent(1)) +
+  theme_inrae() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(y = "Proportion") +
+  theme(axis.title.y = element_blank())  +
+  scale_fill_brewer(palette = "Set3")
+```
+
+```{r fig.width = 12, fig.height = 7}
+ress %>% group_by(annee) %>% mutate(prop = financement / sum(financement)) %>% ungroup() %>% 
+
+ggplot(aes(x = reorder(Type,prop), y = prop)) +
+  geom_col(aes(fill = Type), color = "black") +
+  guides(fill = FALSE) +
+  geom_label(aes(label = paste0(round(prop*100),"%"))) +
+  facet_wrap(~annee) +
+  scale_y_continuous(labels = scales::label_percent(1)) +
+  theme_inrae() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(y = "Proportion") +
+  theme(axis.title.y = element_blank())  +
+  scale_fill_brewer(palette = "Set3")
+```
+
+### Profil de l'UR
+
+```{r fig.width = 9, fig.height = 4}
+dis <- read_excel("data/Disciplines.xlsx") %>% 
+  mutate(Discipline = recode(Discipline, "eco"="Economie","stat"="Statistiques","geo"="Géographie","socio"="Sociologie","agro"="Agronomie","scpo"="Science politique","SPI"="Sciences pour l'ingénieur")) %>% 
+  group_by(Discipline,Statut) %>% 
+  summarise(n = n_distinct(Nom)) %>% 
+  ungroup() %>% 
+  mutate(Statut = factor(Statut, levels = rev(c("Chercheurs","Doctorants et post-doctorants","HDR"))))
+
+
+ggplot(dis, aes(x = Discipline, y = n)) +
+  geom_col(aes(fill = Statut), color = "black") +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0,15,2)) +
+  theme_inrae() +
+  scale_fill_brewer(palette = "OrRd",guide = guide_legend(reverse = TRUE)) +
+  theme(axis.title.y =element_blank()) +
+  labs(y = "Effectifs")
+
+
+```
+
+
 
 ## Reste à faire
 
-- [ ] Synthèse détaillée par onglet
-- [ ] Approche "Publish or Perish" pour les données de citations pour complément de l'approche Scopus
-- [ ] Représentation 'Réseau' des collaborations (internes et externes)
-- [ ] Catégorisation des structures avec lesquelles ETBX co-publie
-- [ ] Affectation de chaque membre de l'UR à une grande discipline (SHS/SE,SPI et éventuellement autres...)
-- [ ] Recensement des partenaires économiques/externes : Donnée inexistante sur le fichier excel.
-- [ ] Focus sur les contrats "nationaux" afin de séparer les ANR, projets collectivités, etc.
+- [ ] Remplir le document word
+- [ ] Représentation 'Réseau' des collaborations (internes et externes) ?

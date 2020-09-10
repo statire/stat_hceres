@@ -23,15 +23,15 @@ colloques et de chapitres d’ouvrages publiés par des agents de l’unité.
 
 | Type               | 2017 | 2018 | 2019 | 2020 |
 | :----------------- | ---: | ---: | ---: | ---: |
-| Articles           |   20 |   13 |   11 |    5 |
+| Articles           |   20 |   13 |   11 |    7 |
 | Autres articles    |    2 |    3 |    1 |   NA |
 | Actes colloques    |    5 |    9 |    4 |   NA |
 | Chapitres ouvrages |    1 |    1 |    2 |   NA |
 
 </div>
 
-Il y a **40** articles scientifiques et **3** chapitres d’ouvrages en
-langue anglaise.
+Production en langue anglaise : **40** articles scientifiques et **3**
+chapitres d’ouvrages.
 
 #### Revues scientifiques
 
@@ -49,11 +49,6 @@ lisibilité, nous ne conservons que les revues pour lesquelles la
 différence entre les deux variables est supérieure à 1.
 
 <img src="analyses_axe3_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
-
-Et voici une version alternative avec l’une des variables passée en
-négatif afin de mieux distinguer les deux variables :
-
-<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ### Partenariats
 
@@ -91,7 +86,15 @@ Nous pouvons donc quantifier le nombre d’auteurs ETBX pour chaque
 production scientifique (comprenant les articles scientifiques et les
 chapitres d’ouvrages) :
 
-<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+<div class="kable-table">
+
+| Nombre de co-auteurs ETBX de l’axe 3 sur une production scientifique | Fréquence |
+| -------------------------------------------------------------------: | --------: |
+|                                                                    2 |        10 |
+|                                                                    3 |         1 |
+|                                                                    4 |         1 |
+
+</div>
 
 Avec l’information du nombre de co-auteurs, nous pouvons corriger le
 nuage de revues précédent en le pondérant par le nombre moyen de
@@ -146,19 +149,26 @@ catégorie a pu être récupérée.
 
 Voici donc le résumé du nombre de publications par catégorie JCR :
 
-<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
 
 Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons
 dénombrer le nombre de disciplines mobilisées pour chaque production
 scientifique (comprenant les articles scientifiques et les chapitres
 d’ouvrages) :
 
-<img src="analyses_axe3_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<div class="kable-table">
+
+| Nombre de disciplines impliquées sur une production scientifique | Fréquence |
+| ---------------------------------------------------------------: | --------: |
+|                                                                2 |        10 |
+|                                                                3 |         1 |
+
+</div>
 
 Autre indicateurs:
 
-  - Il y a **3** publications avec \> 2 agents ETBX (de l’axe 3) mais où
+  - Il y a **2** publications avec \> 2 agents ETBX (de l’axe 3) mais où
     ces agents sont de la **même discipline**.
 
-  - Il y a **48** publications où **un seul** agent ETBX de l’axe 3 est
+  - Il y a **37** publications où **un seul** agent ETBX de l’axe 3 est
     impliqué.
