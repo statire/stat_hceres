@@ -754,7 +754,7 @@ ggplot(aes(x = reorder_within(Type,prop,annee), y = prop)) +
   coord_flip() +
   theme(axis.text.x = element_text(angle = 90)) +
   labs(y = "Proportion") +
-  theme(axis.title.y = element_blank())  +
+  theme(axis.title.y = element_blank(), axis.text.x = element_blank(),axis.ticks.x =element_blank(), axis.title.x = element_blank())  +
   scale_fill_brewer(palette = "Set3")
 ```
 
@@ -771,19 +771,20 @@ ggplot(aes(x = reorder(Type,prop), y = prop)) +
   coord_flip() +
   theme(axis.text.x = element_text(angle = 90)) +
   labs(y = "Proportion") +
-  theme(axis.title.y = element_blank())  +
+  theme(axis.title.y = element_blank(), axis.text.x = element_blank(),axis.ticks.x =element_blank(), axis.title.x = element_blank())  +
   scale_fill_brewer(palette = "Set3")
 ```
 
 ### Profil de l'UR
 
-```{r fig.width = 9, fig.height = 4}
+```{r fig.width = 13, fig.height = 4}
 dis <- read_excel("data/Disciplines.xlsx") %>% 
-  mutate(Discipline = recode(Discipline, "eco"="Economie","stat"="Statistiques","geo"="Géographie","socio"="Sociologie","agro"="Agronomie","scpo"="Science politique","SPI"="Sciences pour l'ingénieur")) %>% 
+  mutate(Discipline = recode(Discipline, "eco"="Economie","stat"="Statistiques, Mathématiques et Informatique","geo"="Géographie","socio"="Sociologie","agro"="Agronomie","scpo"="Sciences politiques","SPI"="Sciences pour l'ingénieur et hydraulique")) %>% 
+  mutate(Statut = recode(Statut, "Chercheurs"="Agents permanents","HDR"="dont HDR")) %>% 
   group_by(Discipline,Statut) %>% 
   summarise(n = n_distinct(Nom)) %>% 
   ungroup() %>% 
-  mutate(Statut = factor(Statut, levels = rev(c("Chercheurs","Doctorants et post-doctorants","HDR"))))
+  mutate(Statut = factor(Statut, levels = rev(c("Agents permanents","dont HDR","Doctorants et post-doctorants"))))
 
 
 ggplot(dis, aes(x = Discipline, y = n)) +
@@ -791,9 +792,9 @@ ggplot(dis, aes(x = Discipline, y = n)) +
   coord_flip() +
   scale_y_continuous(breaks = seq(0,15,2)) +
   theme_inrae() +
-  scale_fill_brewer(palette = "OrRd",guide = guide_legend(reverse = TRUE)) +
+  scale_fill_brewer(palette = "OrRd",guide = guide_legend(reverse = TRUE), direction = -1) +
   theme(axis.title.y =element_blank()) +
-  labs(y = "Effectifs")
+  labs(y = "Effectifs")  
 
 
 ```
