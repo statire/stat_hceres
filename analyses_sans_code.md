@@ -19,6 +19,7 @@ Traitement des données issues du document partagé pour l’Annexe 4
           - [RH](#rh)
           - [Ressources](#ressources)
           - [Profil de l’UR](#profil-de-lur)
+          - [Profils individuels UR](#profils-individuels-ur)
       - [Reste à faire](#reste-à-faire)
 
 # Exploitation des données
@@ -356,13 +357,15 @@ Les structures avec lesquelles on co-publie majoritairement (n copubli
 
 ### Ressources
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-29-1.png" width="100%" />
-
 <img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-30-1.png" width="100%" />
 
 ### Profil de l’UR
 
 <img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-31-1.png" width="100%" />
+
+### Profils individuels UR
+
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-32-1.png" width="100%" />
 
 ## Reste à faire
 
