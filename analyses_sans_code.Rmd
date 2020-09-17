@@ -10,7 +10,13 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", dpi = 320)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	dpi = 320,
+	out.width = "100%"
+)
 ```
 
 
@@ -773,7 +779,7 @@ ggplot(aes(x = reorder(Type,prop), y = prop)) +
 
 ### Profil de l'UR
 
-```{r fig.width = 9}
+```{r fig.width = 11}
 dis <- read_excel("data/Disciplines.xlsx") %>% 
   mutate(Discipline = recode(Discipline, "eco"="Economie","stat"="Statistiques, Mathématiques et Informatique","geo"="Géographie","socio"="Sociologie","agro"="Agronomie","scpo"="Sciences politiques","SPI"="Sciences pour l'ingénieur et hydraulique")) %>% 
   mutate(Statut = recode(Statut, "Chercheurs"="Agents permanents","HDR"="dont HDR")) %>% 
