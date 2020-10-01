@@ -490,7 +490,7 @@ tab_relecture_articles %>%
 Tableau des 10 avec le plus grand nombre de publi : 
 
 ```{r}
-tab_relecture_articles %>% arrange(desc(n_relecture,n_publi))
+tab_relecture_articles %>% arrange(desc(n_relecture,n_publi)) %>% slice(1:10)
 ```
 
 
