@@ -16,6 +16,7 @@ Traitement des données issues du document partagé pour l’Annexe 4
                 (externe)](#interdisciplinarité-éloignée-externe)
       - [Graphes supplémentaires (intro du
         rapport)](#graphes-supplémentaires-intro-du-rapport)
+          - [Pyramide des âges](#pyramide-des-âges)
           - [RH](#rh)
           - [Ressources](#ressources)
           - [Profil de l’UR](#profil-de-lur)
@@ -36,7 +37,7 @@ Traitement des données issues du document partagé pour l’Annexe 4
 Nous pouvons dans un premier temps représenter graphiquement la
 chronologie des contrats :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 
 Et dénombrer le nombre de contrats pour lesquels ETBX est porteur ou
 non, ainsi que les types de contrats :
@@ -145,7 +146,137 @@ nombre de relectures) sur un même graphique. Dans un soucis de
 lisibilité, nous ne conservons que les revues pour lesquelles la
 différence entre les deux variables est supérieure à 1.
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+
+Tableau des 10 avec le plus grand nombre de publi :
+
+<div class="kable-table">
+
+| revue\_ouvrage                                                     | n\_relecture | n\_publi |
+| :----------------------------------------------------------------- | -----------: | -------: |
+| journal of water resources planning and management                 |           29 |       10 |
+| journal of hydroinformatics, iwa                                   |           10 |        0 |
+| social indicators research                                         |            8 |        1 |
+| water resources research, agu                                      |            5 |        0 |
+| water science and technology: water supply, iwa                    |            5 |        0 |
+| agricultural water management                                      |            4 |        0 |
+| environmental science and policy                                   |            4 |        4 |
+| silva fennica                                                      |            4 |        0 |
+| water                                                              |            4 |        2 |
+| développement durable et territoires                               |            3 |        4 |
+| urban water journal                                                |            3 |        2 |
+| conservation                                                       |            2 |        0 |
+| dwes, drinking water engineering and science                       |            2 |        0 |
+| journal of choice modelling                                        |            2 |        0 |
+| journal of irrigation and drainage engineering                     |            2 |        0 |
+| water research, elsevier                                           |            2 |        0 |
+| agricultural systems                                               |            1 |        0 |
+| agronomie, environnement et sociétés                               |            1 |        2 |
+| annals of forest science                                           |            1 |        0 |
+| belgeo                                                             |            1 |        0 |
+| climatic change                                                    |            1 |        0 |
+| communication in statistics                                        |            1 |        0 |
+| comptes rendus geoscience                                          |            1 |        0 |
+| ddt                                                                |            1 |        0 |
+| echogéo                                                            |            1 |        0 |
+| ecological economics                                               |            1 |        1 |
+| ecological indicators                                              |            1 |        1 |
+| economie rurale                                                    |            1 |        1 |
+| energy policy                                                      |            1 |        0 |
+| environment modeling software, elsevier                            |            1 |        0 |
+| environmental modelling and assessment                             |            1 |        0 |
+| environmental pollution                                            |            1 |        0 |
+| environmental science and pollution research                       |            1 |        2 |
+| etudes rurales                                                     |            1 |        0 |
+| european review of agricultural economics                          |            1 |        0 |
+| flux : cahiers scientifiques internationaux réseaux et territoires |            1 |        0 |
+| forest policy and economics                                        |            1 |        4 |
+| journal de la société française de statistique                     |            1 |        0 |
+| journal of choice modeling                                         |            1 |        0 |
+| journal of environmental economics and policy                      |            1 |        0 |
+| journal of environmental management                                |            1 |        1 |
+| journal of environmental policy & planning                         |            1 |        0 |
+| journal of outdoor récréation and nature tourism                   |            1 |        0 |
+| journal of water resource and protection natural resources         |            1 |        0 |
+| land use policy                                                    |            1 |        5 |
+| landscape and urban planning                                       |            1 |        0 |
+| les cahier scicenifiques du parc national de port cros             |            1 |        0 |
+| natures sciences sociétés                                          |            1 |        5 |
+| norois                                                             |            1 |        0 |
+| nss                                                                |            1 |        0 |
+| ocean and coastal management                                       |            1 |        0 |
+| ouvrage “débattre du paysage”                                      |            1 |        0 |
+| politique européenne                                               |            1 |        1 |
+| revue d’anthropologie des connaissances                            |            1 |        1 |
+| revue d’economie régionale et urbaine                              |            1 |        0 |
+| revue economique                                                   |            1 |        1 |
+| revue internationale des etudes du développement                   |            1 |        0 |
+| revue internationale des études du développement                   |            1 |        1 |
+| river research and applications                                    |            1 |        0 |
+| small-scale forestry                                               |            1 |        0 |
+| sud-ouest europeen                                                 |            1 |        6 |
+| vertigo                                                            |            1 |        5 |
+| vertigo - la revue électronique en sciences de l’environnement 1   |            1 |        0 |
+| water and environment journal                                      |            1 |        0 |
+| water research                                                     |            1 |        0 |
+| water resources and economics                                      |            1 |        2 |
+| cahiers agriculture                                                |            0 |        3 |
+| cahiers d’études du ghff                                           |            0 |        1 |
+| cahiers de géographie du québec                                    |            0 |        1 |
+| canadian journal of regional science                               |            0 |        1 |
+| climate policy                                                     |            0 |        2 |
+| computational statistics                                           |            0 |        1 |
+| drinking water engineering and science                             |            0 |        1 |
+| energy economics                                                   |            0 |        1 |
+| environment and history                                            |            0 |        1 |
+| environmental management                                           |            0 |        1 |
+| espace géographique                                                |            0 |        1 |
+| espacestemps.net                                                   |            0 |        1 |
+| ethique et economie                                                |            0 |        1 |
+| ethnographiques.org                                                |            0 |        1 |
+| european water                                                     |            0 |        1 |
+| food policy                                                        |            0 |        1 |
+| geoforum                                                           |            0 |        1 |
+| géographie, economie, société                                      |            0 |        3 |
+| h2open journal iwa publishing                                      |            0 |        1 |
+| international forestry review                                      |            0 |        1 |
+| international journal of environmental technology and management   |            0 |        1 |
+| international journal of geomatics                                 |            0 |        1 |
+| journal for the history of environment and society                 |            0 |        1 |
+| journal of coastal research                                        |            0 |        1 |
+| journal of environmental planning and management                   |            0 |        1 |
+| journal of hydraulic engineering                                   |            0 |        1 |
+| journal of hydroinformatics                                        |            0 |        1 |
+| journal of modern project management                               |            0 |        1 |
+| journal of rural studies                                           |            0 |        1 |
+| journal of urban research                                          |            0 |        1 |
+| journal of water supply                                            |            0 |        2 |
+| journal of wine economics                                          |            0 |        1 |
+| loisir et société                                                  |            0 |        1 |
+| outlook on agriculture                                             |            0 |        1 |
+| pacific journal of mathematics for industry                        |            0 |        1 |
+| participations                                                     |            0 |        1 |
+| policy sciences                                                    |            0 |        1 |
+| procedia engineering                                               |            0 |        2 |
+| projets de paysages                                                |            0 |        1 |
+| regards sociologiques                                              |            0 |        1 |
+| région et développement                                            |            0 |        1 |
+| regional environmental change                                      |            0 |        1 |
+| revue de l’ofce                                                    |            0 |        1 |
+| revue forestière française                                         |            0 |        2 |
+| revue française d’economie                                         |            0 |        2 |
+| scientific reports of port-cros national park                      |            0 |        1 |
+| sociologia ruralis                                                 |            0 |        1 |
+| sociologies                                                        |            0 |        1 |
+| sociologies pratiques                                              |            0 |        1 |
+| stochastic environmental research and risk assessment              |            0 |        1 |
+| technology and culture                                             |            0 |        1 |
+| water economics and policy                                         |            0 |        1 |
+| water science and technology                                       |            0 |        2 |
+| water utility journal                                              |            0 |        1 |
+| wires water                                                        |            0 |        1 |
+
+</div>
 
 #### Nombre de citations
 
@@ -225,7 +356,7 @@ catégorie a pu être récupérée.
 
 Voici donc le résumé du nombre de publications par catégorie JCR :
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-20-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-22-1.png" width="100%" />
 
 Nous pouvons maintenant nous intéresser aux disciplines. Nous pouvons
 dénombrer le nombre de disciplines mobilisées pour chaque production
@@ -351,21 +482,25 @@ Les structures avec lesquelles on co-publie majoritairement (n copubli
 
 ## Graphes supplémentaires (intro du rapport)
 
-### RH
-
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-28-1.png" width="100%" />
-
-### Ressources
+### Pyramide des âges
 
 <img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-30-1.png" width="100%" />
 
-### Profil de l’UR
+### RH
 
 <img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-31-1.png" width="100%" />
 
+### Ressources
+
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-33-1.png" width="100%" />
+
+### Profil de l’UR
+
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-34-1.png" width="100%" />
+
 ### Profils individuels UR
 
-<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-32-1.png" width="100%" />
+<img src="analyses_sans_code_files/figure-gfm/unnamed-chunk-35-1.png" width="100%" />
 
 ## Reste à faire
 
