@@ -885,25 +885,24 @@ ress <- read_excel("data/financements.xlsx") %>%
 "))
 ```
 
-```{r fig.width = 12}
+```{r fig.width = 9}
 ress %>% group_by(annee) %>% mutate(prop = financement / sum(financement)) %>% ungroup() %>% 
+  group_by(Type) %>% 
+  summarise(prop = ceiling(mean(prop)*100)) %>% 
 
 ggplot(aes(x = reorder(Type,prop), y = prop)) +
   geom_col(aes(fill = Type), color = "black") +
   guides(fill = FALSE) +
-  geom_label(aes(label = paste0(round(prop*100),"%"))) +
-  facet_wrap(~annee) +
-  scale_y_continuous(labels = scales::label_percent(1)) +
+  geom_label(aes(label = paste0(ceiling(prop),"%"))) +
   theme_tq() +
   theme(axis.text = element_text(size = 12),
-        axis.title = element_text(size = 13),
+        axis.title = element_text(size = 13,face="bold"),
         strip.text = element_text(size = 14),
         legend.text = element_text(size = 12),
         legend.position = "top") +
   coord_flip() +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(y = "Proportion") +
-  theme(axis.title.y = element_blank(), axis.text.x = element_blank(),axis.ticks.x =element_blank(), axis.title.x = element_blank())  +
+  labs(y = "Pourcentage moyen") +
+  theme(axis.title.y = element_blank())  +
   scale_fill_tq()
 ```
 
@@ -916,14 +915,17 @@ dis <- read_excel("data/Disciplines.xlsx") %>%
   group_by(Discipline,Statut) %>% 
   summarise(n = n_distinct(Nom)) %>% 
   ungroup() %>% 
-  mutate(Statut = factor(Statut, levels = rev(c("Agents permanents","dont HDR","Doctorants et post-doctorants"))))
+  mutate(Statut = factor(Statut, levels = rev(c("Agents permanents","dont HDR","Doctorants et post-doctorants")))) %>% 
+  mutate(perm = ifelse(Statut == "Doctorants et post-doctorants", yes = "Doctorants et post-doctorants", no = "Permanents" )) %>% 
+  mutate(perm = factor(perm, levels = c("Permanents","Doctorants et post-doctorants")))
 
 dis[14,3] <- 3
 
 ggplot(dis, aes(x = Discipline, y = n)) +
   geom_col(aes(fill = Statut), color = "black") +
   coord_flip() +
-  scale_y_continuous(breaks = seq(0,15,2)) +
+  facet_wrap(~perm,ncol=2)+
+  scale_y_continuous(breaks = seq(0,15,1)) +
   theme_tq() +
   theme(axis.text = element_text(size = 12),
         axis.title = element_text(size = 13,face="bold"),
